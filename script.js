@@ -50,6 +50,10 @@ const motorOffsets = {
   RSHOULDER: 0,
   RARM: 0
 };
+const headPoseOffset = {
+  tilt: 0,
+  bob: 0
+};
 let isDemoRoutineActive = false;
 let demoRoutineTimer = null;
 
@@ -146,6 +150,8 @@ function flashTxLight(type = 'beat') {
   telemetryTxLight.classList.add('active');
   if (type === 'beat') {
     telemetryTxLight.innerText = "TX_BEAT";
+  } else if (type === 'step') {
+    telemetryTxLight.innerText = "TX_STEP";
   } else {
     telemetryTxLight.innerText = "TX_SET";
   }
@@ -367,16 +373,9 @@ function sendBeatEnergy() {
   
   // Always pull fresh FFT data before sending so the value is never stale
   computeBeatEnergy();
-  
-  const cmd = `BEAT:${beatEnergy.toFixed(2)}`;
-  
-  if (wsConnected && ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(cmd);
-    bytesSent += cmd.length;
-    flashTxLight('beat');
-  }
-  
-  logWS(`SENT -> ${cmd}`, 'tx-beat');
+
+  // Beat energy now biases Markov STEP selection locally; it is no longer
+  // streamed as its own WebSocket packet during dance playback.
 }
 
 // Byte data rate telemetry tracker
@@ -506,7 +505,7 @@ function startPlayback() {
   clearInterval(progressTimer);
   progressTimer = setInterval(updateProgressBar, 100);
   
-  logTerminal("Audio stream playing. Broadcasting beat telemetry...");
+  logTerminal("Audio stream playing. Markov scheduler is selecting STEP commands...");
 }
 
 function pausePlayback() {
@@ -899,9 +898,9 @@ function updateRobotHologram() {
     visor.setAttribute('stroke-width', '5');
   }
   
-  // Subtle head tilt/bob during beat
-  const headBob = beatEnergy * 5;
-  headGroup.setAttribute('transform', `translate(0, ${headBob})`);
+  // Markov steps provide intentional head motion; beat energy adds a small pulse.
+  const headBob = headPoseOffset.bob + (beatEnergy * 5);
+  headGroup.setAttribute('transform', `translate(0, ${headBob}) rotate(${headPoseOffset.tilt} 200 105)`);
 }
 
 // Reset Motor angles back to nominal poses (90 deg)
@@ -921,6 +920,8 @@ function resetRobotPose() {
   Object.keys(motorOffsets).forEach(m => {
     motorOffsets[m] = 0;
   });
+  headPoseOffset.tilt = 0;
+  headPoseOffset.bob = 0;
   
   updateRobotHologram();
 }
@@ -1175,30 +1176,8 @@ function computeProceduralOscillations() {
   
   updateRobotHologram();
   
-  // Continuously send out motor updates while dancing if connected
-  if (isAudioPlaying && wsConnected && ws && ws.readyState === WebSocket.OPEN) {
-    // Send state adjustments to hardware periodically (rate-limited by the requestAnimationFrame check)
-    // We only send offset values that change significantly to avoid overwhelming buffers
-    const now = performance.now();
-    if (!this.lastServoTime) this.lastServoTime = 0;
-    
-    if (now - this.lastServoTime > 120) { // Send servo state updates every 120ms max during AI mode
-      this.lastServoTime = now;
-      
-      const lShFinal = Math.round(Math.max(0, Math.min(180, motors.LSHOULDER + motorOffsets.LSHOULDER)));
-      const lArmFinal = Math.round(Math.max(0, Math.min(180, motors.LARM + motorOffsets.LARM)));
-      const rShFinal = Math.round(Math.max(0, Math.min(180, motors.RSHOULDER + motorOffsets.RSHOULDER)));
-      const rArmFinal = Math.round(Math.max(0, Math.min(180, motors.RARM + motorOffsets.RARM)));
-      
-      ws.send(`SET:LSHOULDER:${lShFinal}`);
-      ws.send(`SET:LARM:${lArmFinal}`);
-      ws.send(`SET:RSHOULDER:${rShFinal}`);
-      ws.send(`SET:RARM:${rArmFinal}`);
-      
-      bytesSent += 60; // Approximate byte size of packets
-      flashTxLight('command');
-    }
-  }
+  // Hardware dance motion is now STEP-based. This legacy visual oscillator may
+  // still animate the dashboard if invoked, but it must not stream servo angles.
 }
 
 // ========================================================

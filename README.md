@@ -1,56 +1,67 @@
 # Groovix
 
-A browser-based Markov-driven dance controller that sends motor commands to an ESP32 via WebSocket. Designed to run in a browser with Web Audio analysis and a deterministic Markov engine for stable, repeatable choreography.
+A browser-based Markov dance controller that sends dance step IDs to an ESP32 via WebSocket. The browser keeps the Web Audio analysis, UI, and WebSocket connection, while the ESP32 owns the servo poses in `danceMoves[20]` and executes motion locally.
 
 ## Features
 
-- Markov dance engine (`markov_dance.js`) with 20 predefined states and deterministic 5-candidate transitions.
-- Energy profiling (10s window) that classifies audio energy into LOW/MID/HIGH and biases transitions accordingly.
-- Smooth motion interpolation using requestAnimationFrame.
-- WebSocket integration (`ws`) for sending `BEAT:` and `SET:` messages to hardware (ESP32 or mock harness).
-- Safety gating: no BEAT/SET messages are sent unless audio is playing.
-- Transition table refresh while music plays and a debug endpoint to force refresh.
+- Markov dance engine (`markov_dance.js`) with 20 ESP32-compatible dance states.
+- Each state now defines a full pose: shoulders, arms, and head tilt/bob metadata for preview and ESP32 choreography mapping.
+- Configurable transition matrix with energy-aware weighting for LOW, MID, and HIGH behavior.
+- Anti-repeat selection so the robot avoids tight loops.
+- Adaptive transition cadence from roughly 2s to 3s based on audio energy and optional BPM globals.
+- Low-traffic WebSocket protocol: scheduled `STEP:<id>` commands instead of continuous servo angle streaming.
+- Local dashboard pose interpolation remains browser-only for smooth visual feedback.
 
 ## Files
 
-- `index.html` — app entry; loads `markov_dance.js` before `script.js`.
-- `markov_dance.js` — Markov engine, scheduler, motion loop, WebSocket hooks.
-- `script.js` — app initialization, WebSocket connection, audio setup and UI glue.
-- `mock_esp32.js` — local test harness that listens for `BEAT:` and `SET:` messages.
-- `style.css` — UI styles.
-- `package.json` — project metadata (if present).
+- `index.html` - app entry; loads `markov_dance.js` before `script.js`.
+- `markov_dance.js` - Markov state manager, transition matrix, scheduler, energy integration, and STEP sender.
+- `script.js` - app initialization, WebSocket connection, audio setup, and UI glue.
+- `mock_esp32.js` - local test harness that listens for `STEP:` messages.
+- `style.css` - UI styles.
+- `package.json` - project metadata.
 
-## Quick start (development)
+## Quick start
 
-1. Open `index.html` in a modern browser (Chrome/Edge/Firefox).
-2. Ensure the page can access audio (play a track or enable microphone as configured).
-3. The Markov engine starts automatically via `initMarkovDanceEngine()` in `script.js`.
-
-If you want to test without hardware, run the mock ESP32 harness in a Node.js environment (if provided) or inspect the browser console for outgoing WebSocket messages.
+1. Open `index.html` in a modern browser.
+2. Connect to the ESP32 WebSocket endpoint or use the local simulator.
+3. Load and play an audio file.
+4. The Markov scheduler starts automatically through `initMarkovDanceEngine()`.
 
 ## WebSocket message format
 
-- `BEAT:<value>` — emitted every 10 seconds by the Markov engine (value ~0.0-1.0 energy level).
-- `SET:<MOTOR>:<ANGLE>` — motor set commands rate-limited by the Markov engine.
+- `STEP:<id>` - primary protocol, where `<id>` is `1` through `20`.
+- `STEP:<id>:<energy>` - optional extended format. Enable with `STEP_PROTOCOL.INCLUDE_ENERGY` in `markov_dance.js`.
 
-Notes: All outbound packets are gated: they are only sent when the app's audio-playing state is true.
+Examples:
+
+```text
+STEP:2
+STEP:5
+STEP:1
+```
+
+The ESP32 should map the incoming ID to its local motion table. Each local move should include shoulder, arm, and head servo targets where your hardware supports them:
+
+```cpp
+applyMove(stepNumber);
+```
+
+Manual slider controls still use legacy `SET:<MOTOR>:<ANGLE>` commands for calibration/manual operation. The Markov dance engine does not stream servo angles.
 
 ## Developer notes
 
-- Transition cadence is configurable in `markov_dance.js` via `TRANSITION_DELAY_MIN_MS` and `TRANSITION_DELAY_MAX_MS` (currently set to a fixed 3000ms cadence).
+- Tune the state graph in `TRANSITION_MATRIX` inside `markov_dance.js`.
+- Tune timing in `DANCE_TIMING`.
+- Tune energy behavior in `ENERGY_WEIGHTS` and `ENERGY_THRESHOLDS`.
 - Force a transition table rebuild from the console using `window.forceMarkovTransitionRefresh()`.
-- The engine uses a seeded shuffle to ensure deterministic candidate selection between refreshes.
-- To add states or tune motor offsets, edit `DANCE_STATES` inside `markov_dance.js`.
 
-## Testing & Debugging
+## Testing
 
-- Open the browser DevTools console to see `[MARKOV]` logs for state transitions, BEAT samples, and refresh events.
-- Use the mock harness (`mock_esp32.js`) to verify message formats without hardware.
+Run the mock receiver:
 
-## License
+```bash
+node mock_esp32.js
+```
 
-This repository contains demo code. Add a license file if you intend to publish or share this project.
-
----
-
-If you'd like, I can also add a small `README` section showing example console commands to run the mock harness or a `Dev` npm script — want me to add that?
+Then connect the app to `ws://localhost:81` and play audio. The mock displays the active `STEP` command.

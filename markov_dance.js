@@ -1,35 +1,35 @@
 /* ================================================================ */
-/* MARKOV_DANCE.JS  //  GROOVIX PROBABILISTIC DANCE ENGINE  v3.0    */
+/* MARKOV_DANCE.JS  //  GROOVIX STEP-BASED DANCE ENGINE             */
 /* ================================================================ */
 
 'use strict';
 
 /* ================================================================ */
-/* SECTION 1: STATE DEFINITIONS                                    */
+/* SECTION 1: STATE DEFINITIONS                                     */
 /* ================================================================ */
 const DANCE_STATES = [
-  { id: 1,  name: 'REST_NATURAL',   leftArm: 90,  rightArm: 90,  category: 'A' },
-  { id: 2,  name: 'SWAY_LEFT',      leftArm: 72,  rightArm: 102, category: 'A' },
-  { id: 3,  name: 'SWAY_RIGHT',     leftArm: 108, rightArm: 78,  category: 'A' },
-  { id: 4,  name: 'GENTLE_OPEN',    leftArm: 62,  rightArm: 118, category: 'A' },
-  { id: 5,  name: 'SOFT_CROSS',     leftArm: 118, rightArm: 62,  category: 'A' },
-  { id: 6,  name: 'LEFT_REACH',     leftArm: 46,  rightArm: 88,  category: 'A' },
-  { id: 7,  name: 'RIGHT_REACH',    leftArm: 92,  rightArm: 46,  category: 'A' },
+  { id: 1,  name: 'REST_NATURAL',   category: 'A', pose: { leftShoulder: 90,  leftArm: 90,  rightShoulder: 90,  rightArm: 90,  headTilt: 0,   headBob: 0 } },
+  { id: 2,  name: 'SWAY_LEFT',      category: 'A', pose: { leftShoulder: 72,  leftArm: 104, rightShoulder: 102, rightArm: 82,  headTilt: -7,  headBob: 1 } },
+  { id: 3,  name: 'SWAY_RIGHT',     category: 'A', pose: { leftShoulder: 108, leftArm: 78,  rightShoulder: 78,  rightArm: 106, headTilt: 7,   headBob: 1 } },
+  { id: 4,  name: 'GENTLE_OPEN',    category: 'A', pose: { leftShoulder: 62,  leftArm: 112, rightShoulder: 118, rightArm: 68,  headTilt: 0,   headBob: -1 } },
+  { id: 5,  name: 'SOFT_CROSS',     category: 'A', pose: { leftShoulder: 118, leftArm: 62,  rightShoulder: 62,  rightArm: 118, headTilt: 0,   headBob: 2 } },
+  { id: 6,  name: 'LEFT_REACH',     category: 'A', pose: { leftShoulder: 46,  leftArm: 72,  rightShoulder: 88,  rightArm: 104, headTilt: -10, headBob: 0 } },
+  { id: 7,  name: 'RIGHT_REACH',    category: 'A', pose: { leftShoulder: 92,  leftArm: 104, rightShoulder: 46,  rightArm: 72,  headTilt: 10,  headBob: 0 } },
 
-  { id: 8,  name: 'GROOVE_WIDE',    leftArm: 50,  rightArm: 132, category: 'B' },
-  { id: 9,  name: 'GROOVE_NARROW',  leftArm: 132, rightArm: 50,  category: 'B' },
-  { id: 10, name: 'PUMP_LEFT',      leftArm: 34,  rightArm: 112, category: 'B' },
-  { id: 11, name: 'PUMP_RIGHT',     leftArm: 112, rightArm: 34,  category: 'B' },
-  { id: 12, name: 'HALF_WAVE',      leftArm: 58,  rightArm: 142, category: 'B' },
-  { id: 13, name: 'BOUNCE_ARMS',    leftArm: 76,  rightArm: 76,  category: 'B' },
-  { id: 14, name: 'MID_CROSS',      leftArm: 138, rightArm: 138, category: 'B' },
+  { id: 8,  name: 'GROOVE_WIDE',    category: 'B', pose: { leftShoulder: 50,  leftArm: 124, rightShoulder: 132, rightArm: 56,  headTilt: -5,  headBob: 3 } },
+  { id: 9,  name: 'GROOVE_NARROW',  category: 'B', pose: { leftShoulder: 132, leftArm: 58,  rightShoulder: 50,  rightArm: 122, headTilt: 5,   headBob: 3 } },
+  { id: 10, name: 'PUMP_LEFT',      category: 'B', pose: { leftShoulder: 34,  leftArm: 46,  rightShoulder: 112, rightArm: 94,  headTilt: -12, headBob: 4 } },
+  { id: 11, name: 'PUMP_RIGHT',     category: 'B', pose: { leftShoulder: 112, leftArm: 94,  rightShoulder: 34,  rightArm: 46,  headTilt: 12,  headBob: 4 } },
+  { id: 12, name: 'HALF_WAVE',      category: 'B', pose: { leftShoulder: 58,  leftArm: 38,  rightShoulder: 142, rightArm: 112, headTilt: -8,  headBob: 2 } },
+  { id: 13, name: 'BOUNCE_ARMS',    category: 'B', pose: { leftShoulder: 76,  leftArm: 64,  rightShoulder: 76,  rightArm: 116, headTilt: 0,   headBob: 6 } },
+  { id: 14, name: 'MID_CROSS',      category: 'B', pose: { leftShoulder: 138, leftArm: 136, rightShoulder: 138, rightArm: 44,  headTilt: 0,   headBob: 3 } },
 
-  { id: 15, name: 'FULL_OPEN',      leftArm: 22,  rightArm: 158, category: 'C' },
-  { id: 16, name: 'FULL_CROSS',     leftArm: 158, rightArm: 22,  category: 'C' },
-  { id: 17, name: 'VICTORY_ARMS',   leftArm: 32,  rightArm: 32,  category: 'C' },
-  { id: 18, name: 'POWER_LEFT',     leftArm: 12,  rightArm: 148, category: 'C' },
-  { id: 19, name: 'POWER_RIGHT',    leftArm: 148, rightArm: 12,  category: 'C' },
-  { id: 20, name: 'FRENZY_SPREAD',  leftArm: 16,  rightArm: 164, category: 'C' },
+  { id: 15, name: 'FULL_OPEN',      category: 'C', pose: { leftShoulder: 22,  leftArm: 34,  rightShoulder: 158, rightArm: 146, headTilt: 0,   headBob: -2 } },
+  { id: 16, name: 'FULL_CROSS',     category: 'C', pose: { leftShoulder: 158, leftArm: 148, rightShoulder: 22,  rightArm: 32,  headTilt: 0,   headBob: 5 } },
+  { id: 17, name: 'VICTORY_ARMS',   category: 'C', pose: { leftShoulder: 32,  leftArm: 28,  rightShoulder: 32,  rightArm: 152, headTilt: 0,   headBob: -4 } },
+  { id: 18, name: 'POWER_LEFT',     category: 'C', pose: { leftShoulder: 12,  leftArm: 36,  rightShoulder: 148, rightArm: 82,  headTilt: -15, headBob: 5 } },
+  { id: 19, name: 'POWER_RIGHT',    category: 'C', pose: { leftShoulder: 148, leftArm: 82,  rightShoulder: 12,  rightArm: 36,  headTilt: 15,  headBob: 5 } },
+  { id: 20, name: 'FRENZY_SPREAD',  category: 'C', pose: { leftShoulder: 16,  leftArm: 26,  rightShoulder: 164, rightArm: 154, headTilt: 0,   headBob: 8 } },
 ];
 
 const ENERGY_THRESHOLDS = {
@@ -38,42 +38,71 @@ const ENERGY_THRESHOLDS = {
 };
 
 const ENERGY_WEIGHTS = {
-  LOW:  { A: 2.5, B: 0.8, C: 0.1 },
-  MID:  { A: 0.7, B: 2.0, C: 0.7 },
-  HIGH: { A: 0.1, B: 0.8, C: 2.5 },
+  LOW:  { A: 2.4, B: 0.8, C: 0.15 },
+  MID:  { A: 0.8, B: 2.0, C: 0.8 },
+  HIGH: { A: 0.15, B: 0.9, C: 2.5 },
 };
 
-const BASE_PROBABILITIES = [0.30, 0.25, 0.20, 0.15, 0.10];
-const ENERGY_PROFILE_INTERVAL_MS = 10000;
-const TRANSITION_REFRESH_MS = 5000; // rebuild transition candidates every 5s while playing
-const TRANSITION_DELAY_MIN_MS = 3000; // 3 seconds between dance moves
-const TRANSITION_DELAY_MAX_MS = 3000; // fixed 3s cadence
-const LERP_SPEED = 0.10;
-const MOTOR_SEND_RATE_MS = 66;
+const DANCE_TIMING = {
+  MIN_MS: 2000,
+  DEFAULT_MS: 2600,
+  MAX_MS: 3000,
+};
+
+const STEP_PROTOCOL = {
+  INCLUDE_ENERGY: false,
+  MIN_REPEAT_GAP: 2,
+};
+
+const ENERGY_PROFILE_INTERVAL_MS = 500;
+const UI_LERP_SPEED = 0.12;
+
+/*
+ * Tunable Markov matrix. Each source state maps to likely next step IDs.
+ * Probabilities are intentionally local: most transitions stay in a compatible
+ * energy band, while a few bridge states let the robot ramp up or cool down.
+ */
+const TRANSITION_MATRIX = {
+  1:  [{ id: 2, p: 0.35 }, { id: 4, p: 0.25 }, { id: 8, p: 0.20 }, { id: 13, p: 0.15 }, { id: 1, p: 0.05 }],
+  2:  [{ id: 3, p: 0.40 }, { id: 5, p: 0.30 }, { id: 1, p: 0.20 }, { id: 4, p: 0.10 }],
+  3:  [{ id: 2, p: 0.40 }, { id: 4, p: 0.25 }, { id: 7, p: 0.20 }, { id: 9, p: 0.15 }],
+  4:  [{ id: 5, p: 0.30 }, { id: 8, p: 0.25 }, { id: 2, p: 0.20 }, { id: 12, p: 0.15 }, { id: 1, p: 0.10 }],
+  5:  [{ id: 4, p: 0.35 }, { id: 3, p: 0.25 }, { id: 9, p: 0.20 }, { id: 14, p: 0.15 }, { id: 1, p: 0.05 }],
+  6:  [{ id: 7, p: 0.35 }, { id: 10, p: 0.25 }, { id: 2, p: 0.20 }, { id: 8, p: 0.15 }, { id: 1, p: 0.05 }],
+  7:  [{ id: 6, p: 0.35 }, { id: 11, p: 0.25 }, { id: 3, p: 0.20 }, { id: 9, p: 0.15 }, { id: 1, p: 0.05 }],
+  8:  [{ id: 9, p: 0.30 }, { id: 12, p: 0.25 }, { id: 10, p: 0.20 }, { id: 15, p: 0.15 }, { id: 4, p: 0.10 }],
+  9:  [{ id: 8, p: 0.30 }, { id: 14, p: 0.25 }, { id: 11, p: 0.20 }, { id: 16, p: 0.15 }, { id: 5, p: 0.10 }],
+  10: [{ id: 11, p: 0.30 }, { id: 12, p: 0.25 }, { id: 8, p: 0.20 }, { id: 18, p: 0.15 }, { id: 6, p: 0.10 }],
+  11: [{ id: 10, p: 0.30 }, { id: 13, p: 0.25 }, { id: 9, p: 0.20 }, { id: 19, p: 0.15 }, { id: 7, p: 0.10 }],
+  12: [{ id: 13, p: 0.30 }, { id: 8, p: 0.25 }, { id: 15, p: 0.20 }, { id: 10, p: 0.15 }, { id: 4, p: 0.10 }],
+  13: [{ id: 12, p: 0.25 }, { id: 14, p: 0.25 }, { id: 10, p: 0.20 }, { id: 17, p: 0.20 }, { id: 1, p: 0.10 }],
+  14: [{ id: 13, p: 0.30 }, { id: 9, p: 0.25 }, { id: 16, p: 0.20 }, { id: 11, p: 0.15 }, { id: 5, p: 0.10 }],
+  15: [{ id: 17, p: 0.30 }, { id: 18, p: 0.25 }, { id: 12, p: 0.20 }, { id: 8, p: 0.15 }, { id: 20, p: 0.10 }],
+  16: [{ id: 19, p: 0.30 }, { id: 17, p: 0.25 }, { id: 14, p: 0.20 }, { id: 9, p: 0.15 }, { id: 20, p: 0.10 }],
+  17: [{ id: 15, p: 0.25 }, { id: 16, p: 0.25 }, { id: 20, p: 0.20 }, { id: 13, p: 0.20 }, { id: 12, p: 0.10 }],
+  18: [{ id: 19, p: 0.30 }, { id: 20, p: 0.25 }, { id: 15, p: 0.20 }, { id: 10, p: 0.15 }, { id: 12, p: 0.10 }],
+  19: [{ id: 18, p: 0.30 }, { id: 20, p: 0.25 }, { id: 16, p: 0.20 }, { id: 11, p: 0.15 }, { id: 14, p: 0.10 }],
+  20: [{ id: 17, p: 0.30 }, { id: 18, p: 0.20 }, { id: 19, p: 0.20 }, { id: 15, p: 0.15 }, { id: 16, p: 0.15 }],
+};
 
 /* ================================================================ */
 /* SECTION 2: ENGINE                                                */
 /* ================================================================ */
 const MarkovDance = (() => {
-  const statesByCategory = {
-    A: DANCE_STATES.filter(state => state.category === 'A'),
-    B: DANCE_STATES.filter(state => state.category === 'B'),
-    C: DANCE_STATES.filter(state => state.category === 'C'),
-  };
+  const statesById = new Map(DANCE_STATES.map(state => [state.id, state]));
+  const POSE_FIELDS = ['leftShoulder', 'leftArm', 'rightShoulder', 'rightArm', 'headTilt', 'headBob'];
 
   let transitionTable = new Map();
   let currentState = DANCE_STATES[0];
   let currentEnergyValue = 0;
   let currentEnergyCategory = 'LOW';
-  let targetLeft = currentState.leftArm;
-  let targetRight = currentState.rightArm;
-  let currentLeft = currentState.leftArm;
-  let currentRight = currentState.rightArm;
+  let recentStateIds = [currentState.id];
+  let targetPose = { ...currentState.pose };
+  let currentPose = { ...currentState.pose };
   let schedulerTimer = null;
   let energyTimer = null;
-  let transitionRefreshTimer = null;
   let motionFrameId = null;
-  let lastMotorSendMs = 0;
+  let lastStepCommand = '';
 
   function isSongPlaying() {
     return typeof isAudioPlaying !== 'undefined' && isAudioPlaying;
@@ -90,103 +119,127 @@ const MarkovDance = (() => {
     return 'HIGH';
   }
 
-  function seededShuffle(list, seed) {
-    const array = [...list];
-    let state = seed >>> 0;
-    for (let index = array.length - 1; index > 0; index -= 1) {
-      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-      const swapIndex = state % (index + 1);
-      [array[index], array[swapIndex]] = [array[swapIndex], array[index]];
+  function normalizeProbabilities(candidates) {
+    const total = candidates.reduce((sum, candidate) => sum + candidate.weight, 0);
+    if (!total) {
+      const equalWeight = 1 / candidates.length;
+      return candidates.map(candidate => ({ ...candidate, probability: equalWeight }));
     }
-    return array;
+
+    return candidates.map(candidate => ({
+      ...candidate,
+      probability: candidate.weight / total,
+    }));
+  }
+
+  function buildCumulativeProbabilities(candidates) {
+    let runningTotal = 0;
+    return candidates.map((candidate, index) => {
+      runningTotal += candidate.probability;
+      return {
+        ...candidate,
+        cumulative: index === candidates.length - 1 ? 1 : runningTotal,
+      };
+    });
   }
 
   function buildTransitionTable() {
     transitionTable = new Map();
 
-    DANCE_STATES.forEach(state => {
-      const sameCategory = statesByCategory[state.category].filter(candidate => candidate.id !== state.id);
-      const otherCategories = ['A', 'B', 'C'].filter(category => category !== state.category);
+    Object.entries(TRANSITION_MATRIX).forEach(([sourceId, transitions]) => {
+      const candidates = transitions
+        .map(transition => ({
+          state: statesById.get(transition.id),
+          baseProbability: transition.p,
+        }))
+        .filter(candidate => candidate.state);
 
-      const sameCandidates = seededShuffle(sameCategory, state.id * 37).slice(0, 3);
-      const crossCategoryA = seededShuffle(statesByCategory[otherCategories[0]], state.id * 53)[0];
-      const crossCategoryB = seededShuffle(statesByCategory[otherCategories[1]], state.id * 91)[0];
-
-      transitionTable.set(state.id, [
-        sameCandidates[0],
-        sameCandidates[1],
-        sameCandidates[2],
-        crossCategoryA,
-        crossCategoryB,
-      ]);
+      transitionTable.set(Number(sourceId), candidates);
     });
 
-    console.log(`[MARKOV] Transition table built with ${DANCE_STATES.length} states.`);
+    console.log(`[MARKOV] Loaded ${transitionTable.size} explicit transition rows.`);
   }
 
-  function normalizeProbabilities(weightedValues) {
-    const total = weightedValues.reduce((sum, value) => sum + value, 0);
-    if (!total) {
-      const equalWeight = 1 / weightedValues.length;
-      return weightedValues.map(() => equalWeight);
+  function updateEnergySample() {
+    if (typeof computeBeatEnergy === 'function') {
+      computeBeatEnergy();
     }
-    return weightedValues.map(value => value / total);
+
+    const rawEnergy = clamp01(typeof beatEnergy === 'number' ? beatEnergy : 0);
+    currentEnergyValue = rawEnergy;
+    currentEnergyCategory = classifyEnergy(rawEnergy);
+
+    if (typeof markovIntensity !== 'undefined') markovIntensity = currentEnergyCategory;
+    if (typeof markovState !== 'undefined') markovState = currentState.name;
   }
 
-  function buildCumulativeProbabilities(probabilities) {
-    const cumulative = [];
-    let runningTotal = 0;
+  function getWeightedCandidates() {
+    const candidates = transitionTable.get(currentState.id) || transitionTable.get(1);
+    const weights = ENERGY_WEIGHTS[currentEnergyCategory];
 
-    probabilities.forEach(probability => {
-      runningTotal += probability;
-      cumulative.push(runningTotal);
+    const weighted = candidates.map(candidate => {
+      const wasRecent = recentStateIds.includes(candidate.state.id);
+      const repeatPenalty = wasRecent ? 0.35 : 1;
+      const categoryWeight = weights[candidate.state.category] || 1;
+
+      return {
+        ...candidate,
+        weight: candidate.baseProbability * categoryWeight * repeatPenalty,
+      };
     });
 
-    cumulative[cumulative.length - 1] = 1;
-    return cumulative;
+    return buildCumulativeProbabilities(normalizeProbabilities(weighted));
   }
 
-  function selectFromCumulativeDistribution(cumulativeProbabilities) {
+  function selectNextState() {
+    updateEnergySample();
+
+    const weightedCandidates = getWeightedCandidates();
     const roll = Math.random();
-    for (let index = 0; index < cumulativeProbabilities.length; index += 1) {
-      if (roll <= cumulativeProbabilities[index]) return index;
-    }
-    return cumulativeProbabilities.length - 1;
-  }
+    const selected = weightedCandidates.find(candidate => roll <= candidate.cumulative) || weightedCandidates[weightedCandidates.length - 1];
 
-  function getWeightedProbabilities(candidates, energyCategory) {
-    const weights = ENERGY_WEIGHTS[energyCategory];
-    const weighted = candidates.map((candidate, index) => BASE_PROBABILITIES[index] * weights[candidate.category]);
-    return normalizeProbabilities(weighted);
-  }
-
-  function pickNextState() {
-    const candidates = transitionTable.get(currentState.id);
-    const weightedProbabilities = getWeightedProbabilities(candidates, currentEnergyCategory);
-    const cumulative = buildCumulativeProbabilities(weightedProbabilities);
-    const selectedIndex = selectFromCumulativeDistribution(cumulative);
     return {
-      state: candidates[selectedIndex],
-      probabilities: weightedProbabilities,
-      cumulative,
-      selectedIndex,
+      state: selected.state,
+      roll,
+      candidates: weightedCandidates,
+      selected,
     };
   }
 
-  function sendBeatTelemetry(energyValue) {
+  function getAdaptiveDelay() {
+    const energyRange = DANCE_TIMING.MAX_MS - DANCE_TIMING.MIN_MS;
+    const energyDelay = DANCE_TIMING.MAX_MS - Math.round(currentEnergyValue * energyRange);
+    const bpm = typeof estimatedBpm === 'number' && Number.isFinite(estimatedBpm) ? estimatedBpm : 0;
+
+    if (bpm >= 120) return Math.max(DANCE_TIMING.MIN_MS, energyDelay - 250);
+    if (bpm > 0 && bpm < 85) return Math.min(DANCE_TIMING.MAX_MS, energyDelay + 250);
+
+    return Math.max(DANCE_TIMING.MIN_MS, Math.min(DANCE_TIMING.MAX_MS, energyDelay || DANCE_TIMING.DEFAULT_MS));
+  }
+
+  function formatStepCommand(stateId) {
+    if (STEP_PROTOCOL.INCLUDE_ENERGY) {
+      return `STEP:${stateId}:${currentEnergyValue.toFixed(2)}`;
+    }
+
+    return `STEP:${stateId}`;
+  }
+
+  function sendDanceStep(stateId) {
     if (!isSongPlaying()) return;
 
-    const value = clamp01(energyValue);
-    const command = `BEAT:${value.toFixed(2)}`;
+    const command = formatStepCommand(stateId);
+    if (command === lastStepCommand) return;
+    lastStepCommand = command;
 
-    if (typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) {
+    if (typeof wsConnected !== 'undefined' && wsConnected && typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) {
       ws.send(command);
       if (typeof bytesSent !== 'undefined') bytesSent += command.length;
-      if (typeof flashTxLight === 'function') flashTxLight('beat');
+      if (typeof flashTxLight === 'function') flashTxLight('step');
     }
 
     if (typeof logWS === 'function') {
-      logWS(`SENT -> ${command}`, 'tx-beat');
+      logWS(`SENT -> ${command}`, 'tx-cmd');
     }
   }
 
@@ -212,40 +265,33 @@ const MarkovDance = (() => {
     const cellWave = document.getElementById('cell-wave');
     const cellFrenzy = document.getElementById('cell-frenzy');
 
-    if (cellIdle) cellIdle.innerText = `A x${ENERGY_WEIGHTS[currentEnergyCategory].A.toFixed(1)}`;
-    if (cellBounce) cellBounce.innerText = `B x${ENERGY_WEIGHTS[currentEnergyCategory].B.toFixed(1)}`;
-    if (cellWave) cellWave.innerText = `C x${ENERGY_WEIGHTS[currentEnergyCategory].C.toFixed(1)}`;
-    if (cellFrenzy) cellFrenzy.innerText = `CDF ${Math.round(currentEnergyValue * 100)}%`;
-
-    if (typeof logTerminal === 'function') {
-      logTerminal(
-        `[MARKOV] Energy profile -> value=${currentEnergyValue.toFixed(2)} category=${currentEnergyCategory}`,
-        'info'
-      );
-    }
+    if (cellIdle) cellIdle.innerText = `LOW x${ENERGY_WEIGHTS[currentEnergyCategory].A.toFixed(1)}`;
+    if (cellBounce) cellBounce.innerText = `MID x${ENERGY_WEIGHTS[currentEnergyCategory].B.toFixed(1)}`;
+    if (cellWave) cellWave.innerText = `HIGH x${ENERGY_WEIGHTS[currentEnergyCategory].C.toFixed(1)}`;
+    if (cellFrenzy) cellFrenzy.innerText = `STEP ${currentState.id}`;
   }
 
   function updateStateUi(state, transitionMeta) {
     const stateLabel = document.getElementById('markov-state');
-    if (stateLabel) stateLabel.innerText = state.name;
-
-    const categoryToCell = {
-      A: document.getElementById('cell-idle'),
-      B: document.getElementById('cell-bounce'),
-      C: document.getElementById('cell-wave'),
-    };
+    if (stateLabel) stateLabel.innerText = `${state.id}: ${state.name}`;
 
     ['cell-idle', 'cell-bounce', 'cell-wave', 'cell-frenzy'].forEach(id => {
       const element = document.getElementById(id);
       if (element) element.classList.remove('active');
     });
 
-    const activeCell = categoryToCell[state.category];
+    const activeCellByCategory = {
+      A: document.getElementById('cell-idle'),
+      B: document.getElementById('cell-bounce'),
+      C: document.getElementById('cell-wave'),
+    };
+
+    const activeCell = activeCellByCategory[state.category];
     if (activeCell) activeCell.classList.add('active');
 
     if (typeof logWS === 'function') {
       logWS(
-        `MARKOV -> [${state.name}] cat:${state.category} energy:${currentEnergyCategory} cdf:${transitionMeta.cumulative[transitionMeta.selectedIndex].toFixed(3)}`,
+        `MARKOV -> step:${state.id} cat:${state.category} energy:${currentEnergyCategory} p:${transitionMeta.selected.probability.toFixed(2)}`,
         'tx-cmd'
       );
     }
@@ -253,93 +299,76 @@ const MarkovDance = (() => {
 
   function applyDanceState(nextState, transitionMeta) {
     currentState = nextState;
-    targetLeft = nextState.leftArm;
-    targetRight = nextState.rightArm;
+    targetPose = { ...nextState.pose };
+    recentStateIds.push(nextState.id);
+
+    while (recentStateIds.length > STEP_PROTOCOL.MIN_REPEAT_GAP + 1) {
+      recentStateIds.shift();
+    }
+
     updateStateUi(nextState, transitionMeta);
+    sendDanceStep(nextState.id);
 
     console.log(
-      `[MARKOV] state=${nextState.name} (${nextState.category}) left=${nextState.leftArm} right=${nextState.rightArm} energy=${currentEnergyCategory}`
+      `[MARKOV] step=${nextState.id} state=${nextState.name} category=${nextState.category} energy=${currentEnergyValue.toFixed(2)}`
     );
   }
 
-  function updateRobotPose(leftAngle, rightAngle) {
+  function updateRobotPose(pose) {
     if (typeof motorOffsets === 'undefined' || typeof motors === 'undefined') return;
 
-    motorOffsets.LSHOULDER = leftAngle - motors.LSHOULDER;
-    motorOffsets.RSHOULDER = rightAngle - motors.RSHOULDER;
-    motorOffsets.LARM = 0;
-    motorOffsets.RARM = 0;
+    motorOffsets.LSHOULDER = pose.leftShoulder - motors.LSHOULDER;
+    motorOffsets.LARM = pose.leftArm - motors.LARM;
+    motorOffsets.RSHOULDER = pose.rightShoulder - motors.RSHOULDER;
+    motorOffsets.RARM = pose.rightArm - motors.RARM;
+
+    if (typeof headPoseOffset !== 'undefined') {
+      headPoseOffset.tilt = pose.headTilt;
+      headPoseOffset.bob = pose.headBob;
+    }
 
     if (typeof updateRobotHologram === 'function') {
       updateRobotHologram();
     }
   }
 
-  function sendMotorState(leftAngle, rightAngle) {
-    if (!isSongPlaying()) return;
-
-    const now = performance.now();
-    if (now - lastMotorSendMs < MOTOR_SEND_RATE_MS) return;
-    lastMotorSendMs = now;
-
-    if (typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(`SET:LSHOULDER:${leftAngle}`);
-      ws.send(`SET:RSHOULDER:${rightAngle}`);
-
-      if (typeof bytesSent !== 'undefined') bytesSent += 30;
-      if (typeof flashTxLight === 'function') flashTxLight('command');
-    }
-  }
-
   function motionLoop() {
-    currentLeft += (targetLeft - currentLeft) * LERP_SPEED;
-    currentRight += (targetRight - currentRight) * LERP_SPEED;
+    POSE_FIELDS.forEach(field => {
+      currentPose[field] += (targetPose[field] - currentPose[field]) * UI_LERP_SPEED;
+      if (Math.abs(currentPose[field] - targetPose[field]) < 0.25) {
+        currentPose[field] = targetPose[field];
+      }
+    });
 
-    if (Math.abs(currentLeft - targetLeft) < 0.25) currentLeft = targetLeft;
-    if (Math.abs(currentRight - targetRight) < 0.25) currentRight = targetRight;
-
-    const leftAngle = Math.round(Math.max(0, Math.min(180, currentLeft)));
-    const rightAngle = Math.round(Math.max(0, Math.min(180, currentRight)));
-
-    updateRobotPose(leftAngle, rightAngle);
-    sendMotorState(leftAngle, rightAngle);
-
+    updateRobotPose({
+      leftShoulder: Math.round(Math.max(0, Math.min(180, currentPose.leftShoulder))),
+      leftArm: Math.round(Math.max(0, Math.min(180, currentPose.leftArm))),
+      rightShoulder: Math.round(Math.max(0, Math.min(180, currentPose.rightShoulder))),
+      rightArm: Math.round(Math.max(0, Math.min(180, currentPose.rightArm))),
+      headTilt: currentPose.headTilt,
+      headBob: currentPose.headBob,
+    });
     motionFrameId = requestAnimationFrame(motionLoop);
   }
 
   function scheduleNextTransition() {
     if (!isSongPlaying()) {
-      schedulerTimer = setTimeout(scheduleNextTransition, TRANSITION_DELAY_MIN_MS);
+      updateEnergySample();
+      updateEnergyUi();
+      schedulerTimer = setTimeout(scheduleNextTransition, DANCE_TIMING.DEFAULT_MS);
       return;
     }
 
-    const nextStateMeta = pickNextState();
+    const nextStateMeta = selectNextState();
     applyDanceState(nextStateMeta.state, nextStateMeta);
+    updateEnergyUi();
 
-    const delay = TRANSITION_DELAY_MIN_MS + Math.floor(Math.random() * (TRANSITION_DELAY_MAX_MS - TRANSITION_DELAY_MIN_MS + 1));
-    schedulerTimer = setTimeout(scheduleNextTransition, delay);
+    schedulerTimer = setTimeout(scheduleNextTransition, getAdaptiveDelay());
   }
 
   function sampleEnergyProfile() {
-    if (!isSongPlaying()) {
-      currentEnergyValue = 0;
-      currentEnergyCategory = 'LOW';
-      updateEnergyUi();
-      console.log('[MARKOV] song paused, skipping BEAT telemetry and Markov energy send');
-      return;
-    }
-
-    const rawEnergy = clamp01(typeof beatEnergy === 'number' ? beatEnergy : 0);
-    currentEnergyValue = rawEnergy;
-    currentEnergyCategory = classifyEnergy(rawEnergy);
-
-    if (typeof markovIntensity !== 'undefined') markovIntensity = currentEnergyCategory;
-    if (typeof markovState !== 'undefined') markovState = currentState.name;
-
-    sendBeatTelemetry(rawEnergy);
+    updateEnergySample();
     updateEnergyUi();
-
-    console.log(`[MARKOV] beat energy sample=${rawEnergy.toFixed(2)} category=${currentEnergyCategory}`);
   }
 
   function startEnergyProfiler() {
@@ -349,36 +378,29 @@ const MarkovDance = (() => {
 
   function start() {
     console.log('[MARKOV] ==========================================');
-    console.log('[MARKOV] GROOVIX Markov Dance Engine v3.0 starting');
+    console.log('[MARKOV] GROOVIX STEP Markov Dance Engine starting');
     console.log('[MARKOV] ==========================================');
 
     buildTransitionTable();
     currentState = DANCE_STATES[0];
-    targetLeft = currentState.leftArm;
-    targetRight = currentState.rightArm;
-    currentLeft = currentState.leftArm;
-    currentRight = currentState.rightArm;
+    currentEnergyValue = 0;
+    currentEnergyCategory = 'LOW';
+    recentStateIds = [currentState.id];
+    lastStepCommand = '';
+    targetPose = { ...currentState.pose };
+    currentPose = { ...currentState.pose };
 
-    updateRobotPose(currentState.leftArm, currentState.rightArm);
+    updateRobotPose(currentState.pose);
     updateEnergyUi();
 
     if (schedulerTimer) clearTimeout(schedulerTimer);
     if (motionFrameId) cancelAnimationFrame(motionFrameId);
 
     startEnergyProfiler();
-    schedulerTimer = setTimeout(scheduleNextTransition, TRANSITION_DELAY_MIN_MS + Math.floor(Math.random() * (TRANSITION_DELAY_MAX_MS - TRANSITION_DELAY_MIN_MS + 1)));
+    schedulerTimer = setTimeout(scheduleNextTransition, DANCE_TIMING.DEFAULT_MS);
     motionLoop();
 
-    // Start transition refresher (rebuild candidates every 5s while music plays)
-    if (transitionRefreshTimer) clearInterval(transitionRefreshTimer);
-    transitionRefreshTimer = setInterval(() => {
-      if (isSongPlaying()) {
-        buildTransitionTable();
-        console.log('[MARKOV] Transition table refreshed (5s) while music playing.');
-      }
-    }, TRANSITION_REFRESH_MS);
-
-    console.log('[MARKOV] Live state engine ready: 20 states | energy refresh: 10s | transition cadence: 3000ms');
+    console.log('[MARKOV] Step engine ready: 20 states | payload: STEP:<id> | cadence: adaptive 2s-3s');
   }
 
   function stop() {
@@ -387,16 +409,10 @@ const MarkovDance = (() => {
     if (motionFrameId) cancelAnimationFrame(motionFrameId);
     energyTimer = null;
     schedulerTimer = null;
-    if (transitionRefreshTimer) clearInterval(transitionRefreshTimer);
-    transitionRefreshTimer = null;
     motionFrameId = null;
     console.log('[MARKOV] Dance engine stopped.');
   }
 
-  /*
-   * Manual refresh endpoint to rebuild the transition table on demand.
-   * Intended for debugging and tuning — safe to call while running.
-   */
   function refreshTransitions() {
     buildTransitionTable();
     console.log('[MARKOV] Manual transition table refresh executed.');
@@ -407,10 +423,9 @@ const MarkovDance = (() => {
       currentState,
       currentEnergyValue,
       currentEnergyCategory,
-      targetLeft,
-      targetRight,
-      currentLeft,
-      currentRight,
+      recentStateIds,
+      targetPose,
+      currentPose,
       transitionTable: Object.fromEntries(transitionTable.entries()),
     };
   }
@@ -422,8 +437,6 @@ function initMarkovDanceEngine() {
   MarkovDance.start();
 }
 
-// Global debug helper: call `forceMarkovTransitionRefresh()` from the browser console
-// to force an immediate rebuild of the transition table.
 window.forceMarkovTransitionRefresh = function() {
   if (typeof MarkovDance !== 'undefined' && typeof MarkovDance.refresh === 'function') {
     MarkovDance.refresh();
