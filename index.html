@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GROOVIX // Futuristic Robot Dance Controller</title>
+  <!-- Google Fonts: Orbitron, Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Orbitron:wght@400;600;800;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet link -->
+  <link rel="stylesheet" href="style.css">
+  <!-- FontAwesome Icons for modern dashboard styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+
+  <!-- ========================================== -->
+  <!-- 1. CONNECTION PORTAL (STARTUP SCREEN)      -->
+  <!-- ========================================== -->
+  <div id="connection-portal" class="portal-overlay">
+    <div class="portal-scanner"></div>
+    <div class="portal-content">
+      <div class="portal-header">
+        <div class="glitch-wrapper">
+          <h1 class="portal-logo" data-text="GROOVIX">GROOVIX</h1>
+        </div>
+        <p class="portal-subtitle">KINETIC AUDIO-REACTIVE HUMANOID NODE</p>
+      </div>
+
+      <div class="portal-card">
+        <div class="portal-card-glow"></div>
+        <div class="portal-section-title">
+          <i class="fa-solid fa-network-wired"></i> HARDWARE LINK CONFIGURATION
+        </div>
+        
+        <div class="form-group">
+          <label for="esp32-ip">ESP32 HOST IP ADDRESS</label>
+          <div class="input-wrapper">
+            <span class="protocol-prefix">ws://</span>
+            <input type="text" id="esp32-ip" placeholder="192.168.4.1" value="192.168.4.1">
+            <span class="port-suffix">:81</span>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="btn-connect" class="btn-neon primary">
+            <span class="btn-text">ESTABLISH HARDWARE LINK</span>
+            <span class="btn-glow"></span>
+          </button>
+          <button id="btn-demo" class="btn-neon secondary">
+            <span class="btn-text">ACTIVATE LOCAL SIMULATOR</span>
+            <span class="btn-glow"></span>
+          </button>
+        </div>
+
+        <div class="status-block">
+          <span class="status-label">STATUS:</span>
+          <span id="portal-status" class="status-value disconnected">OFFLINE</span>
+        </div>
+      </div>
+
+      <!-- Terminal Diagnostics Log -->
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="terminal-title">GROOVIX_BOOT_DIAGNOSTICS.log</div>
+        </div>
+        <div id="terminal-log" class="terminal-body">
+          <div class="log-line"><span class="log-time">[21:29:40]</span> <span class="log-info">[INIT]</span> Initializing GROOVIX Operating Core...</div>
+          <div class="log-line"><span class="log-time">[21:29:41]</span> <span class="log-info">[OK]</span> Web Audio Engine nodes allocated.</div>
+          <div class="log-line"><span class="log-time">[21:29:41]</span> <span class="log-warn">[WARN]</span> Hardware link offline. Awaiting ESP32 IP input...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. MAIN ROBOTICS DASHBOARD                 -->
+  <!-- ========================================== -->
+  <div class="dashboard-wrapper container-hidden" id="dashboard-container">
+    
+    <!-- SYSTEM HEADER -->
+    <header class="sys-header">
+      <div class="header-brand">
+        <h2 class="logo-text">GROOVIX <span class="badge">OS v2.4</span></h2>
+        <p class="sub-brand">AI-POWERED HUMAN KINETIC BROADCAST MODULE</p>
+      </div>
+
+      <!-- Live telemetry readouts -->
+      <div class="sys-telemetry">
+        <div class="tel-item">
+          <span class="tel-label">CONNECTION STATE</span>
+          <span id="sys-status" class="tel-value disconnected">DISCONNECTED</span>
+        </div>
+        <div class="tel-item">
+          <span class="tel-label">LATENCY</span>
+          <span id="sys-latency" class="tel-value">-- ms</span>
+        </div>
+        <div class="tel-item">
+          <span class="tel-label">DATA OUT</span>
+          <span id="sys-bps" class="tel-value">0.0 kb/s</span>
+        </div>
+        <div class="tel-item">
+          <button id="btn-disconnect" class="btn-disconnect-hud" title="Disconnect hardware and return to portal">
+            <i class="fa-solid fa-power-off"></i> DISCONNECT
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- GRID LAYOUT -->
+    <main class="dashboard-grid">
+      
+      <!-- COLUMN 1: ROBOT WIREFRAME HUD & MANUAL PANEL -->
+      <div class="grid-col col-left">
+        
+        <!-- HOLOGRAM DISPLAY CARD -->
+        <div class="dashboard-card hologram-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-robot"></i> KINETIC HOLOGRAM SIMULATOR</h3>
+            <span class="card-status-dot active"></span>
+          </div>
+          <div class="card-body hologram-viewport">
+            <!-- Neon background scanner lines -->
+            <div class="grid-overlay"></div>
+            
+            <!-- SVG Robot Wireframe representation -->
+            <svg id="robot-svg" viewBox="0 0 400 400" width="100%" height="100%">
+              <defs>
+                <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="#00f0ff" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="beat-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#bd00ff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#bd00ff" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Circle background grid -->
+              <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(0, 240, 255, 0.05)" stroke-width="1" />
+              <circle cx="200" cy="200" r="120" fill="none" stroke="rgba(0, 240, 255, 0.08)" stroke-width="1" stroke-dasharray="5 5" />
+              <circle cx="200" cy="200" r="70" fill="none" stroke="rgba(0, 240, 255, 0.1)" stroke-width="1" />
+              <line x1="200" y1="20" x2="200" y2="380" stroke="rgba(0, 240, 255, 0.05)" stroke-width="1" />
+              <line x1="20" y1="200" x2="380" y2="200" stroke="rgba(0, 240, 255, 0.05)" stroke-width="1" />
+
+              <!-- Head & Neck -->
+              <g id="robot-head-group">
+                <line x1="200" y1="130" x2="200" y2="150" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" />
+                <rect x="175" y="80" width="50" height="50" rx="10" fill="#080810" stroke="#00f0ff" stroke-width="3" filter="url(#neon-glow)" />
+                <line id="robot-visor" x1="182" y1="100" x2="218" y2="100" stroke="#bd00ff" stroke-width="5" stroke-linecap="round" filter="url(#neon-glow)" />
+                <circle cx="187" cy="115" r="2" fill="#00f0ff" />
+                <circle cx="213" cy="115" r="2" fill="#00f0ff" />
+              </g>
+
+              <!-- Torso Body -->
+              <g id="robot-torso-group">
+                <polygon points="160,150 240,150 220,280 180,280" fill="#080810" stroke="#00f0ff" stroke-width="3" filter="url(#neon-glow)" />
+                <!-- Core Reactor (glowing center pulsing with music beats) -->
+                <circle id="reactor-core-bg" cx="200" cy="210" r="22" fill="url(#core-glow)" />
+                <circle id="reactor-core" cx="200" cy="210" r="10" fill="#00f0ff" stroke="#fff" stroke-width="2" filter="url(#neon-glow)" />
+                <circle id="reactor-ring" cx="200" cy="210" r="16" fill="none" stroke="#bd00ff" stroke-width="1.5" stroke-dasharray="4 2" />
+              </g>
+
+              <!-- Hip & Legs (Static stand/base for dashboard aesthetic) -->
+              <g id="robot-base-group" stroke="rgba(0, 240, 255, 0.4)" stroke-width="2" fill="none">
+                <line x1="180" y1="280" x2="220" y2="280" stroke="#00f0ff" stroke-width="4" />
+                <path d="M 180,280 L 160,340 L 175,360 L 225,360 L 240,340 L 220,280" />
+                <line x1="160" y1="340" x2="240" y2="340" stroke-dasharray="2 2" />
+              </g>
+
+              <!-- LEFT ARM ASSEMBLY (Nested hierarchical groups for physics-linked rotations) -->
+              <!-- Joint: LSHOULDER at (160, 165) -->
+              <g id="lshoulder-joint-group" transform="translate(160, 165)">
+                <!-- Shoulder anchor circle -->
+                <circle cx="0" cy="0" r="8" fill="#080810" stroke="#00f0ff" stroke-width="2" />
+                
+                <!-- Rotate upper arm container -->
+                <g id="lshoulder-rotator" transform="rotate(90)">
+                  <!-- Upper arm bone -->
+                  <line x1="0" y1="0" x2="0" y2="60" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" />
+                  <circle cx="0" cy="30" r="3" fill="#bd00ff" />
+                  
+                  <!-- Joint: LELBOW/LARM at (0, 60) relative to shoulder -->
+                  <g id="larm-joint-group" transform="translate(0, 60)">
+                    <circle cx="0" cy="0" r="6" fill="#080810" stroke="#00f0ff" stroke-width="2" />
+                    
+                    <!-- Rotate forearm container -->
+                    <g id="larm-rotator" transform="rotate(0)">
+                      <!-- Forearm bone -->
+                      <line x1="0" y1="0" x2="0" y2="55" stroke="#bd00ff" stroke-width="3" stroke-linecap="round" />
+                      <!-- Hand/End-Effector -->
+                      <circle cx="0" cy="55" r="5" fill="#00f0ff" filter="url(#neon-glow)" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+              <!-- RIGHT ARM ASSEMBLY -->
+              <!-- Joint: RSHOULDER at (240, 165) -->
+              <g id="rshoulder-joint-group" transform="translate(240, 165)">
+                <!-- Shoulder anchor circle -->
+                <circle cx="0" cy="0" r="8" fill="#080810" stroke="#00f0ff" stroke-width="2" />
+                
+                <!-- Rotate upper arm container -->
+                <g id="rshoulder-rotator" transform="rotate(-90)">
+                  <!-- Upper arm bone -->
+                  <line x1="0" y1="0" x2="0" y2="60" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" />
+                  <circle cx="0" cy="30" r="3" fill="#bd00ff" />
+                  
+                  <!-- Joint: RELBOW/RARM at (0, 60) relative to shoulder -->
+                  <g id="rarm-joint-group" transform="translate(0, 60)">
+                    <circle cx="0" cy="0" r="6" fill="#080810" stroke="#00f0ff" stroke-width="2" />
+                    
+                    <!-- Rotate forearm container -->
+                    <g id="rarm-rotator" transform="rotate(0)">
+                      <!-- Forearm bone -->
+                      <line x1="0" y1="0" x2="0" y2="55" stroke="#bd00ff" stroke-width="3" stroke-linecap="round" />
+                      <!-- Hand/End-Effector -->
+                      <circle cx="0" cy="55" r="5" fill="#00f0ff" filter="url(#neon-glow)" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+
+            </svg>
+
+            <!-- Holographic Overlay telemetry HUD text -->
+            <div class="hologram-hud-top">
+              <span>SYS_MONITOR: ACTIVE</span>
+              <span>GRID_LOCK: ON</span>
+            </div>
+            <div class="hologram-hud-bottom">
+              <span id="hologram-beat-energy">BEAT ENERGY: 0.00</span>
+              <span id="hologram-fps">FPS: 60</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANUAL MOTOR CONTROL PANEL -->
+        <div class="dashboard-card manual-control-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-sliders"></i> MANUAL KINETIC ACTUATORS</h3>
+            <span id="telemetry-tx-light" class="pulse-tx-dot">TX</span>
+          </div>
+          <div class="card-body">
+            
+            <div class="sliders-container">
+              <!-- Slider 1: Left Shoulder -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-cyan">L_SHOULDER</span>
+                  <span class="motor-angle" id="val-lshoulder">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-lshoulder" min="0" max="180" value="90" class="neon-slider-range cyan">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 2: Left Arm (Elbow) -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-cyan">L_ARM_ELBOW</span>
+                  <span class="motor-angle" id="val-larm">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-larm" min="0" max="180" value="90" class="neon-slider-range cyan">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 3: Right Shoulder -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-purple">R_SHOULDER</span>
+                  <span class="motor-angle" id="val-rshoulder">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-rshoulder" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 4: Right Arm (Elbow) -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-purple">R_ARM_ELBOW</span>
+                  <span class="motor-angle" id="val-rarm">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-rarm" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="manual-actions">
+              <button id="btn-reset-pose" class="btn-hud alert">
+                <i class="fa-solid fa-arrows-to-dot"></i> RESET POSE
+              </button>
+              <button id="btn-dance-demo" class="btn-hud success">
+                <i class="fa-solid fa-play"></i> RUN DANCE DEMO
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMN 2: AUDIO ENGINE, VISUALIZER, MARKOV MODULE -->
+      <div class="grid-col col-right">
+        
+        <!-- AUDIO DECK & MUSIC CONTROLLER -->
+        <div class="dashboard-card audio-deck-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-compact-disc"></i> MUSIC SYSTEM CORE</h3>
+            <span id="audio-state-tag" class="hud-pill-neutral">NO AUDIO</span>
+          </div>
+          <div class="card-body">
+            <!-- Drag and drop zone -->
+            <div id="dropzone" class="audio-dropzone">
+              <input type="file" id="file-input" accept="audio/mp3, audio/wav" class="hidden-input">
+              <div class="dropzone-text">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <p class="main-drop-text">DRAG & DROP MUSIC FILE</p>
+                <p class="sub-drop-text">Supports .mp3, .wav files | Or Click to Browse</p>
+              </div>
+            </div>
+
+            <div class="track-meta" id="track-meta">
+              <i class="fa-solid fa-music"></i>
+              <span id="track-name">No track loaded</span>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="audio-controls-block">
+              <div class="playback-buttons">
+                <button id="btn-play-pause" class="btn-round-control" disabled>
+                  <i class="fa-solid fa-play" id="play-icon"></i>
+                </button>
+              </div>
+
+              <div class="progress-container">
+                <span class="time-readout" id="current-time">0:00</span>
+                <div class="progress-bar-outer" id="progress-bar-outer">
+                  <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                </div>
+                <span class="time-readout" id="total-time">0:00</span>
+              </div>
+
+              <div class="volume-container">
+                <i class="fa-solid fa-volume-high volume-icon"></i>
+                <input type="range" id="volume-slider" min="0" max="100" value="70" class="neon-slider-range small">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REALTIME SPECTRUM & OSCILLOSCOPE VISUALIZER -->
+        <div class="dashboard-card visualizer-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-wave-square"></i> LIVE SPECTRAL FREQUENCY REACTOR</h3>
+          </div>
+          <div class="card-body visualizer-layout">
+            
+            <div class="canvas-wrapper">
+              <!-- Web Audio Canvas Visualizer -->
+              <canvas id="visualizer-canvas"></canvas>
+            </div>
+
+            <!-- Side telemetries tracking bass, mid, treble -->
+            <div class="spectrogram-telemetry">
+              <div class="bar-telem">
+                <div class="bar-track">
+                  <div class="bar-fill bass" id="fill-bass"></div>
+                </div>
+                <span class="bar-label">BASS</span>
+                <span class="bar-value" id="val-bass">0.00</span>
+              </div>
+              <div class="bar-telem">
+                <div class="bar-track">
+                  <div class="bar-fill mid" id="fill-mid"></div>
+                </div>
+                <span class="bar-label">MID</span>
+                <span class="bar-value" id="val-mid">0.00</span>
+              </div>
+              <div class="bar-telem">
+                <div class="bar-track">
+                  <div class="bar-fill treble" id="fill-treble"></div>
+                </div>
+                <span class="bar-label">TREBLE</span>
+                <span class="bar-value" id="val-treble">0.00</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MARKOV AI DANCE PORTAL & TELEMETRY TERMINAL -->
+        <div class="dashboard-card markov-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-brain"></i> MARKOV KINETIC STATE MATRIX</h3>
+            <span class="hud-pill-neon" id="markov-enabled-badge">AI ENABLED</span>
+          </div>
+          <div class="card-body markov-layout">
+            
+            <div class="markov-hud-grid">
+              <!-- Dance State widget -->
+              <div class="markov-panel panel-state">
+                <span class="m-label">CURRENT KINETIC STATE</span>
+                <div class="m-value-large" id="markov-state">REST_IDLE</div>
+                <span class="m-subtext">BLENDING: <span id="markov-blend">0%</span></span>
+              </div>
+
+              <!-- Intensity widget -->
+              <div class="markov-panel panel-intensity">
+                <span class="m-label">BEAT INTENSITY RANGE</span>
+                <div class="m-value-intensity neutral" id="markov-intensity">LOW</div>
+                <span class="m-subtext">THRESHOLD: <span id="markov-threshold">1.30</span></span>
+              </div>
+
+              <!-- State Matrix graphic representation -->
+              <div class="markov-matrix-graphic">
+                <span class="matrix-title">PROBABILITY DYNAMICS</span>
+                <div class="matrix-grid">
+                  <div class="matrix-cell active" id="cell-idle">IDLE (90%)</div>
+                  <div class="matrix-cell" id="cell-bounce">BOUNCE (0%)</div>
+                  <div class="matrix-cell" id="cell-wave">WAVE (0%)</div>
+                  <div class="matrix-cell" id="cell-frenzy">FRENZY (0%)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WebSocket Communication Log terminal -->
+            <div class="websocket-console">
+              <div class="ws-console-header">
+                <span>WEBSOCKET LINK TELEMETRY OUTBOX</span>
+                <span class="refresh-rate" id="ws-rate">INTERVAL: 80ms</span>
+              </div>
+              <div class="ws-console-body" id="ws-console-log">
+                <div class="ws-line init">SYS_OUTBOX: Ready to stream. Connecting to target IP...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Audio element source node helper -->
+  <audio id="audio-core"></audio>
+
+  <!-- Global scripts -->
+  <script src="markov_dance.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
