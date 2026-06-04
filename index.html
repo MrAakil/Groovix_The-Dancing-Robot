@@ -193,7 +193,7 @@
                   <line x1="0" y1="0" x2="0" y2="60" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" />
                   <circle cx="0" cy="30" r="3" fill="#bd00ff" />
                   
-                  <!-- Joint: LELBOW/LARM at (0, 60) relative to shoulder -->
+                  <!-- Joint: LELBOW/LFOREARM at (0, 60) relative to shoulder -->
                   <g id="larm-joint-group" transform="translate(0, 60)">
                     <circle cx="0" cy="0" r="6" fill="#080810" stroke="#00f0ff" stroke-width="2" />
                     
@@ -220,7 +220,7 @@
                   <line x1="0" y1="0" x2="0" y2="60" stroke="#00f0ff" stroke-width="4" stroke-linecap="round" />
                   <circle cx="0" cy="30" r="3" fill="#bd00ff" />
                   
-                  <!-- Joint: RELBOW/RARM at (0, 60) relative to shoulder -->
+                  <!-- Joint: RELBOW/RFOREARM at (0, 60) relative to shoulder -->
                   <g id="rarm-joint-group" transform="translate(0, 60)">
                     <circle cx="0" cy="0" r="6" fill="#080810" stroke="#00f0ff" stroke-width="2" />
                     
@@ -258,55 +258,94 @@
           <div class="card-body">
             
             <div class="sliders-container">
-              <!-- Slider 1: Left Shoulder -->
+              <!-- Slider 1: Left Shoulder Vertical -->
               <div class="slider-row">
                 <div class="slider-info">
-                  <span class="motor-tag neon-cyan">L_SHOULDER</span>
-                  <span class="motor-angle" id="val-lshoulder">90°</span>
+                  <span class="motor-tag neon-cyan">L_SHOULDER_V</span>
+                  <span class="motor-angle" id="val-lshoulder-v">90°</span>
                 </div>
                 <div class="slider-control-wrapper">
-                  <input type="range" id="slide-lshoulder" min="0" max="180" value="90" class="neon-slider-range cyan">
+                  <input type="range" id="slide-lshoulder-v" min="0" max="180" value="90" class="neon-slider-range cyan">
                   <span class="angle-bound">0°</span>
                   <span class="angle-bound-right">180°</span>
                 </div>
               </div>
 
-              <!-- Slider 2: Left Arm (Elbow) -->
+              <!-- Slider 2: Left Shoulder Horizontal -->
               <div class="slider-row">
                 <div class="slider-info">
-                  <span class="motor-tag neon-cyan">L_ARM_ELBOW</span>
-                  <span class="motor-angle" id="val-larm">90°</span>
+                  <span class="motor-tag neon-cyan">L_SHOULDER_H</span>
+                  <span class="motor-angle" id="val-lshoulder-h">90°</span>
                 </div>
                 <div class="slider-control-wrapper">
-                  <input type="range" id="slide-larm" min="0" max="180" value="90" class="neon-slider-range cyan">
+                  <input type="range" id="slide-lshoulder-h" min="0" max="180" value="90" class="neon-slider-range cyan">
                   <span class="angle-bound">0°</span>
                   <span class="angle-bound-right">180°</span>
                 </div>
               </div>
 
-              <!-- Slider 3: Right Shoulder -->
+              <!-- Slider 3: Left Forearm -->
               <div class="slider-row">
                 <div class="slider-info">
-                  <span class="motor-tag neon-purple">R_SHOULDER</span>
-                  <span class="motor-angle" id="val-rshoulder">90°</span>
+                  <span class="motor-tag neon-cyan">L_FOREARM</span>
+                  <span class="motor-angle" id="val-lforearm">90°</span>
                 </div>
                 <div class="slider-control-wrapper">
-                  <input type="range" id="slide-rshoulder" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <input type="range" id="slide-lforearm" min="0" max="180" value="90" class="neon-slider-range cyan">
                   <span class="angle-bound">0°</span>
                   <span class="angle-bound-right">180°</span>
                 </div>
               </div>
 
-              <!-- Slider 4: Right Arm (Elbow) -->
+              <!-- Slider 4: Right Shoulder Vertical -->
               <div class="slider-row">
                 <div class="slider-info">
-                  <span class="motor-tag neon-purple">R_ARM_ELBOW</span>
-                  <span class="motor-angle" id="val-rarm">90°</span>
+                  <span class="motor-tag neon-purple">R_SHOULDER_V</span>
+                  <span class="motor-angle" id="val-rshoulder-v">90°</span>
                 </div>
                 <div class="slider-control-wrapper">
-                  <input type="range" id="slide-rarm" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <input type="range" id="slide-rshoulder-v" min="0" max="180" value="90" class="neon-slider-range purple">
                   <span class="angle-bound">0°</span>
                   <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 5: Right Shoulder Horizontal -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-purple">R_SHOULDER_H</span>
+                  <span class="motor-angle" id="val-rshoulder-h">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-rshoulder-h" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 6: Right Forearm -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-purple">R_FOREARM</span>
+                  <span class="motor-angle" id="val-rforearm">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-rforearm" min="0" max="180" value="90" class="neon-slider-range purple">
+                  <span class="angle-bound">0°</span>
+                  <span class="angle-bound-right">180°</span>
+                </div>
+              </div>
+
+              <!-- Slider 7: Head Left/Right Rotation -->
+              <div class="slider-row">
+                <div class="slider-info">
+                  <span class="motor-tag neon-cyan">HEAD_YAW</span>
+                  <span class="motor-angle" id="val-head-yaw">90°</span>
+                </div>
+                <div class="slider-control-wrapper">
+                  <input type="range" id="slide-head-yaw" min="0" max="180" value="90" class="neon-slider-range cyan">
+                  <span class="angle-bound">LEFT</span>
+                  <span class="angle-bound-right">RIGHT</span>
                 </div>
               </div>
             </div>

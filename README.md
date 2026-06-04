@@ -1,23 +1,23 @@
 # Groovix
 
-A browser-based Markov dance controller that sends dance step IDs to an ESP32 via WebSocket. The browser keeps the Web Audio analysis, UI, and WebSocket connection, while the ESP32 owns the servo poses in `danceMoves[20]` and executes motion locally.
+A browser-based Markov dance controller that sends servo angle signals to an ESP32 via WebSocket. The browser keeps the Web Audio analysis, UI, Markov pose selection, and WebSocket connection, while the ESP32 writes each received motor angle to the matching servo.
 
 ## Features
 
 - Markov dance engine (`markov_dance.js`) with 20 ESP32-compatible dance states.
-- Each state now defines a full pose: shoulders, arms, and head tilt/bob metadata for preview and ESP32 choreography mapping.
-- Configurable transition matrix with energy-aware weighting for LOW, MID, and HIGH behavior.
+- Each state now defines a full seven-servo pose: vertical shoulder lift, horizontal shoulder lift, and forearm for each hand, plus head yaw for left/right rotation only.
+- Configurable transition matrix with energy-aware and kinematic-distance weighting for LOW, MID, and HIGH behavior.
 - Anti-repeat selection so the robot avoids tight loops.
 - Adaptive transition cadence from roughly 2s to 3s based on audio energy and optional BPM globals.
-- Low-traffic WebSocket protocol: scheduled `STEP:<id>` commands instead of continuous servo angle streaming.
+- WebSocket servo protocol: scheduled `SET:<motor>:<angle>` commands for all motors in the selected pose.
 - Local dashboard pose interpolation remains browser-only for smooth visual feedback.
 
 ## Files
 
 - `index.html` - app entry; loads `markov_dance.js` before `script.js`.
-- `markov_dance.js` - Markov state manager, transition matrix, scheduler, energy integration, and STEP sender.
+- `markov_dance.js` - Markov state manager, transition matrix, scheduler, energy integration, and servo signal sender.
 - `script.js` - app initialization, WebSocket connection, audio setup, and UI glue.
-- `mock_esp32.js` - local test harness that listens for `STEP:` messages.
+- `mock_esp32.js` - local test harness that listens for `SET:` motor messages.
 - `style.css` - UI styles.
 - `package.json` - project metadata.
 
@@ -28,26 +28,51 @@ A browser-based Markov dance controller that sends dance step IDs to an ESP32 vi
 3. Load and play an audio file.
 4. The Markov scheduler starts automatically through `initMarkovDanceEngine()`.
 
-## WebSocket message format
+## WebSocket Message Format
 
-- `STEP:<id>` - primary protocol, where `<id>` is `1` through `20`.
-- `STEP:<id>:<energy>` - optional extended format. Enable with `STEP_PROTOCOL.INCLUDE_ENERGY` in `markov_dance.js`.
+- `SET:<motor>:<angle>` - primary protocol, where `<angle>` is `0` through `180`.
 
 Examples:
 
 ```text
-STEP:2
-STEP:5
-STEP:1
+SET:LSHOULDER_V:76
+SET:LSHOULDER_H:72
+SET:LFOREARM:104
+SET:RSHOULDER_V:102
+SET:RSHOULDER_H:106
+SET:RFOREARM:82
+SET:HEAD_YAW:72
 ```
 
-The ESP32 should map the incoming ID to its local motion table. Each local move should include shoulder, arm, and head servo targets where your hardware supports them:
+The ESP32 should map each motor name to its servo and write the received angle:
 
 ```cpp
-applyMove(stepNumber);
+servoMap[motorName].write(angle);
 ```
 
-Manual slider controls still use legacy `SET:<MOTOR>:<ANGLE>` commands for calibration/manual operation. The Markov dance engine does not stream servo angles.
+Manual slider controls and Markov playback both use `SET:<MOTOR>:<ANGLE>`. The supported motor names are:
+
+```text
+LSHOULDER_V
+LSHOULDER_H
+LFOREARM
+RSHOULDER_V
+RSHOULDER_H
+RFOREARM
+HEAD_YAW
+```
+
+During playback, every Markov transition sends all seven motor signals to the ESP32.
+
+## Markov movement model
+
+The scheduler treats each dance pose as a Markov state. For every transition, it starts from the explicit row in `TRANSITION_MATRIX`, then multiplies each candidate by:
+
+- the current audio-energy class weight (`LOW`, `MID`, or `HIGH`),
+- an anti-repeat penalty for recently used states,
+- a kinematic smoothness weight based on seven-servo pose distance.
+
+Those candidate weights are normalized into a probability distribution before random sampling, so each next pose is selected from a valid Markov transition distribution while still respecting the three-motor hand mechanics and the left/right-only head axis.
 
 ## Developer notes
 

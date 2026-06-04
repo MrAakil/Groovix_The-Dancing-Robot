@@ -1,0 +1,7 @@
+c====================================================
+ GROOVIX ESP32 MOCK SERVER IS RUNNING ON PORT 81    
+====================================================
+ Awaiting incoming WebSocket connection from web client...
+ Expected URL format: ws://localhost:81
+ Expected command format: SET:<motor>:<angle>
+====================================================

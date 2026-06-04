@@ -39,20 +39,22 @@ const beatDebounceMs = 280;
 
 // Robotics Config
 const motors = {
-  LSHOULDER: 90,
-  LARM: 90,
-  RSHOULDER: 90,
-  RARM: 90
+  LSHOULDER_V: 90,
+  LSHOULDER_H: 90,
+  LFOREARM: 90,
+  RSHOULDER_V: 90,
+  RSHOULDER_H: 90,
+  RFOREARM: 90,
+  HEAD_YAW: 90
 };
 const motorOffsets = {
-  LSHOULDER: 0,
-  LARM: 0,
-  RSHOULDER: 0,
-  RARM: 0
-};
-const headPoseOffset = {
-  tilt: 0,
-  bob: 0
+  LSHOULDER_V: 0,
+  LSHOULDER_H: 0,
+  LFOREARM: 0,
+  RSHOULDER_V: 0,
+  RSHOULDER_H: 0,
+  RFOREARM: 0,
+  HEAD_YAW: 0
 };
 let isDemoRoutineActive = false;
 let demoRoutineTimer = null;
@@ -80,16 +82,22 @@ const telemetryTxLight = document.getElementById('telemetry-tx-light');
 
 // Sliders and Audio controls
 const slides = {
-  LSHOULDER: document.getElementById('slide-lshoulder'),
-  LARM: document.getElementById('slide-larm'),
-  RSHOULDER: document.getElementById('slide-rshoulder'),
-  RARM: document.getElementById('slide-rarm')
+  LSHOULDER_V: document.getElementById('slide-lshoulder-v'),
+  LSHOULDER_H: document.getElementById('slide-lshoulder-h'),
+  LFOREARM: document.getElementById('slide-lforearm'),
+  RSHOULDER_V: document.getElementById('slide-rshoulder-v'),
+  RSHOULDER_H: document.getElementById('slide-rshoulder-h'),
+  RFOREARM: document.getElementById('slide-rforearm'),
+  HEAD_YAW: document.getElementById('slide-head-yaw')
 };
 const valLabels = {
-  LSHOULDER: document.getElementById('val-lshoulder'),
-  LARM: document.getElementById('val-larm'),
-  RSHOULDER: document.getElementById('val-rshoulder'),
-  RARM: document.getElementById('val-rarm')
+  LSHOULDER_V: document.getElementById('val-lshoulder-v'),
+  LSHOULDER_H: document.getElementById('val-lshoulder-h'),
+  LFOREARM: document.getElementById('val-lforearm'),
+  RSHOULDER_V: document.getElementById('val-rshoulder-v'),
+  RSHOULDER_H: document.getElementById('val-rshoulder-h'),
+  RFOREARM: document.getElementById('val-rforearm'),
+  HEAD_YAW: document.getElementById('val-head-yaw')
 };
 
 const btnPlayPause = document.getElementById('btn-play-pause');
@@ -150,8 +158,8 @@ function flashTxLight(type = 'beat') {
   telemetryTxLight.classList.add('active');
   if (type === 'beat') {
     telemetryTxLight.innerText = "TX_BEAT";
-  } else if (type === 'step') {
-    telemetryTxLight.innerText = "TX_STEP";
+  } else if (type === 'pose') {
+    telemetryTxLight.innerText = "TX_POSE";
   } else {
     telemetryTxLight.innerText = "TX_SET";
   }
@@ -374,7 +382,7 @@ function sendBeatEnergy() {
   // Always pull fresh FFT data before sending so the value is never stale
   computeBeatEnergy();
 
-  // Beat energy now biases Markov STEP selection locally; it is no longer
+  // Beat energy now biases Markov pose selection locally; it is no longer
   // streamed as its own WebSocket packet during dance playback.
 }
 
@@ -505,7 +513,7 @@ function startPlayback() {
   clearInterval(progressTimer);
   progressTimer = setInterval(updateProgressBar, 100);
   
-  logTerminal("Audio stream playing. Markov scheduler is selecting STEP commands...");
+  logTerminal("Audio stream playing. Markov scheduler is sending servo pose signals...");
 }
 
 function pausePlayback() {
@@ -857,21 +865,27 @@ function drawStaticVisualizer() {
 // ========================================================
 function updateRobotHologram() {
   // Read motor values (sum of manual and procedural Markov offsets)
-  const lShoulderFinal = Math.max(0, Math.min(180, motors.LSHOULDER + motorOffsets.LSHOULDER));
-  const lArmFinal = Math.max(0, Math.min(180, motors.LARM + motorOffsets.LARM));
-  const rShoulderFinal = Math.max(0, Math.min(180, motors.RSHOULDER + motorOffsets.RSHOULDER));
-  const rArmFinal = Math.max(0, Math.min(180, motors.RARM + motorOffsets.RARM));
+  const lShoulderVerticalFinal = Math.max(0, Math.min(180, motors.LSHOULDER_V + motorOffsets.LSHOULDER_V));
+  const lShoulderHorizontalFinal = Math.max(0, Math.min(180, motors.LSHOULDER_H + motorOffsets.LSHOULDER_H));
+  const lForearmFinal = Math.max(0, Math.min(180, motors.LFOREARM + motorOffsets.LFOREARM));
+  const rShoulderVerticalFinal = Math.max(0, Math.min(180, motors.RSHOULDER_V + motorOffsets.RSHOULDER_V));
+  const rShoulderHorizontalFinal = Math.max(0, Math.min(180, motors.RSHOULDER_H + motorOffsets.RSHOULDER_H));
+  const rForearmFinal = Math.max(0, Math.min(180, motors.RFOREARM + motorOffsets.RFOREARM));
+  const headYawFinal = Math.max(0, Math.min(180, motors.HEAD_YAW + motorOffsets.HEAD_YAW));
   
   // Map angles to SVG rotation degrees
   // SVG default orientations:
-  // LSHOULDER points vertical (rotate = 90 makes it point down. Range 0 to 180 flips arm)
-  // Left arm default is rotated 90. To reflect 0-180 range, we calculate rotations relative to hinge anchor.
-  // We offset it so that angle 90 is natural horizontal/diagonal rest.
-  const svgLShoulderRot = lShoulderFinal; 
-  const svgLArmRot = lArmFinal - 90; // relative to shoulder
+  // *_V lifts the upper arm in the vertical plane.
+  // *_H sweeps the shoulder forward/back in hardware; the 2D hologram previews
+  // it as an outward/inward bias layered onto the shoulder rotation.
+  // *FOREARM controls the elbow/forearm rotation relative to the upper arm.
+  const lHorizontalBias = (lShoulderHorizontalFinal - 90) * 0.35;
+  const rHorizontalBias = (rShoulderHorizontalFinal - 90) * 0.35;
+  const svgLShoulderRot = lShoulderVerticalFinal + lHorizontalBias;
+  const svgLArmRot = lForearmFinal - 90;
   
-  const svgRShoulderRot = -rShoulderFinal;
-  const svgRArmRot = -(rArmFinal - 90); // relative to shoulder
+  const svgRShoulderRot = -(rShoulderVerticalFinal + rHorizontalBias);
+  const svgRArmRot = -(rForearmFinal - 90);
   
   // Apply rotation transforms to elements
   document.getElementById('lshoulder-rotator').setAttribute('transform', `rotate(${svgLShoulderRot})`);
@@ -898,9 +912,9 @@ function updateRobotHologram() {
     visor.setAttribute('stroke-width', '5');
   }
   
-  // Markov steps provide intentional head motion; beat energy adds a small pulse.
-  const headBob = headPoseOffset.bob + (beatEnergy * 5);
-  headGroup.setAttribute('transform', `translate(0, ${headBob}) rotate(${headPoseOffset.tilt} 200 105)`);
+  // Head movement is yaw only: left/right rotation around the head center.
+  const headYawPreview = (headYawFinal - 90) * 0.55;
+  headGroup.setAttribute('transform', `rotate(${headYawPreview} 200 105)`);
 }
 
 // Reset Motor angles back to nominal poses (90 deg)
@@ -920,9 +934,6 @@ function resetRobotPose() {
   Object.keys(motorOffsets).forEach(m => {
     motorOffsets[m] = 0;
   });
-  headPoseOffset.tilt = 0;
-  headPoseOffset.bob = 0;
-  
   updateRobotHologram();
 }
 
@@ -937,34 +948,49 @@ function triggerDanceDemo() {
     
     switch (step % 5) {
       case 0: // Pose 1: Left high, right low
-        setMotorTarget('LSHOULDER', 150);
-        setMotorTarget('LARM', 60);
-        setMotorTarget('RSHOULDER', 30);
-        setMotorTarget('RARM', 120);
+        setMotorTarget('LSHOULDER_V', 150);
+        setMotorTarget('LSHOULDER_H', 55);
+        setMotorTarget('LFOREARM', 60);
+        setMotorTarget('RSHOULDER_V', 30);
+        setMotorTarget('RSHOULDER_H', 125);
+        setMotorTarget('RFOREARM', 120);
+        setMotorTarget('HEAD_YAW', 65);
         break;
       case 1: // Pose 2: Mirror pose
-        setMotorTarget('LSHOULDER', 30);
-        setMotorTarget('LARM', 120);
-        setMotorTarget('RSHOULDER', 150);
-        setMotorTarget('RARM', 60);
+        setMotorTarget('LSHOULDER_V', 30);
+        setMotorTarget('LSHOULDER_H', 125);
+        setMotorTarget('LFOREARM', 120);
+        setMotorTarget('RSHOULDER_V', 150);
+        setMotorTarget('RSHOULDER_H', 55);
+        setMotorTarget('RFOREARM', 60);
+        setMotorTarget('HEAD_YAW', 115);
         break;
       case 2: // Pose 3: Arms Out wide
-        setMotorTarget('LSHOULDER', 120);
-        setMotorTarget('LARM', 90);
-        setMotorTarget('RSHOULDER', 120);
-        setMotorTarget('RARM', 90);
+        setMotorTarget('LSHOULDER_V', 120);
+        setMotorTarget('LSHOULDER_H', 35);
+        setMotorTarget('LFOREARM', 90);
+        setMotorTarget('RSHOULDER_V', 120);
+        setMotorTarget('RSHOULDER_H', 145);
+        setMotorTarget('RFOREARM', 90);
+        setMotorTarget('HEAD_YAW', 90);
         break;
       case 3: // Pose 4: Arms tucked in
-        setMotorTarget('LSHOULDER', 45);
-        setMotorTarget('LARM', 160);
-        setMotorTarget('RSHOULDER', 45);
-        setMotorTarget('RARM', 160);
+        setMotorTarget('LSHOULDER_V', 45);
+        setMotorTarget('LSHOULDER_H', 120);
+        setMotorTarget('LFOREARM', 160);
+        setMotorTarget('RSHOULDER_V', 45);
+        setMotorTarget('RSHOULDER_H', 60);
+        setMotorTarget('RFOREARM', 160);
+        setMotorTarget('HEAD_YAW', 90);
         break;
       case 4: // Pose 5: Mid rest
-        setMotorTarget('LSHOULDER', 90);
-        setMotorTarget('LARM', 90);
-        setMotorTarget('RSHOULDER', 90);
-        setMotorTarget('RARM', 90);
+        setMotorTarget('LSHOULDER_V', 90);
+        setMotorTarget('LSHOULDER_H', 90);
+        setMotorTarget('LFOREARM', 90);
+        setMotorTarget('RSHOULDER_V', 90);
+        setMotorTarget('RSHOULDER_H', 90);
+        setMotorTarget('RFOREARM', 90);
+        setMotorTarget('HEAD_YAW', 90);
         break;
     }
     
@@ -1139,27 +1165,33 @@ function computeProceduralOscillations() {
   switch (markovState) {
     case "IDLE":
       // Tiny breathing drift
-      motorOffsets.LSHOULDER = Math.sin(time * 1.5) * 3;
-      motorOffsets.RSHOULDER = -Math.sin(time * 1.5) * 3;
-      motorOffsets.LARM = Math.cos(time * 1.5) * 2;
-      motorOffsets.RARM = -Math.cos(time * 1.5) * 2;
+      motorOffsets.LSHOULDER_V = Math.sin(time * 1.5) * 3;
+      motorOffsets.RSHOULDER_V = -Math.sin(time * 1.5) * 3;
+      motorOffsets.LSHOULDER_H = Math.cos(time * 1.2) * 2;
+      motorOffsets.RSHOULDER_H = -Math.cos(time * 1.2) * 2;
+      motorOffsets.LFOREARM = Math.cos(time * 1.5) * 2;
+      motorOffsets.RFOREARM = -Math.cos(time * 1.5) * 2;
       break;
       
     case "BOUNCE":
       // Vertical hip/shoulder bounce synchronized with beat decay
       const bounceAmp = 18 * beatEnergy;
-      motorOffsets.LSHOULDER = Math.sin(time * 5) * bounceAmp;
-      motorOffsets.RSHOULDER = Math.sin(time * 5) * bounceAmp;
-      motorOffsets.LARM = Math.cos(time * 5) * (bounceAmp * 0.7);
-      motorOffsets.RARM = Math.cos(time * 5) * (bounceAmp * 0.7);
+      motorOffsets.LSHOULDER_V = Math.sin(time * 5) * bounceAmp;
+      motorOffsets.RSHOULDER_V = Math.sin(time * 5) * bounceAmp;
+      motorOffsets.LSHOULDER_H = Math.sin(time * 2.5) * (bounceAmp * 0.4);
+      motorOffsets.RSHOULDER_H = -Math.sin(time * 2.5) * (bounceAmp * 0.4);
+      motorOffsets.LFOREARM = Math.cos(time * 5) * (bounceAmp * 0.7);
+      motorOffsets.RFOREARM = Math.cos(time * 5) * (bounceAmp * 0.7);
       break;
       
     case "WAVE":
       // Out of phase arm waving
-      motorOffsets.LSHOULDER = Math.sin(time * 3) * 28;
-      motorOffsets.RSHOULDER = -Math.sin(time * 3) * 28;
-      motorOffsets.LARM = Math.sin(time * 3.5 + Math.PI/2) * 15;
-      motorOffsets.RARM = -Math.sin(time * 3.5 + Math.PI/2) * 15;
+      motorOffsets.LSHOULDER_V = Math.sin(time * 3) * 28;
+      motorOffsets.RSHOULDER_V = -Math.sin(time * 3) * 28;
+      motorOffsets.LSHOULDER_H = Math.sin(time * 2.2 + Math.PI / 3) * 18;
+      motorOffsets.RSHOULDER_H = -Math.sin(time * 2.2 + Math.PI / 3) * 18;
+      motorOffsets.LFOREARM = Math.sin(time * 3.5 + Math.PI/2) * 15;
+      motorOffsets.RFOREARM = -Math.sin(time * 3.5 + Math.PI/2) * 15;
       break;
       
     case "FRENZY":
@@ -1167,10 +1199,12 @@ function computeProceduralOscillations() {
       const frenzySpeed = 10 + (beatEnergy * 5);
       const intensityScale = 35 * beatEnergy;
       
-      motorOffsets.LSHOULDER = Math.sin(time * frenzySpeed) * intensityScale;
-      motorOffsets.RSHOULDER = Math.cos(time * (frenzySpeed * 0.9)) * intensityScale;
-      motorOffsets.LARM = Math.sin(time * (frenzySpeed * 1.2)) * (intensityScale * 0.8);
-      motorOffsets.RARM = Math.cos(time * (frenzySpeed * 1.1)) * (intensityScale * 0.8);
+      motorOffsets.LSHOULDER_V = Math.sin(time * frenzySpeed) * intensityScale;
+      motorOffsets.RSHOULDER_V = Math.cos(time * (frenzySpeed * 0.9)) * intensityScale;
+      motorOffsets.LSHOULDER_H = Math.sin(time * (frenzySpeed * 0.75)) * (intensityScale * 0.65);
+      motorOffsets.RSHOULDER_H = Math.cos(time * (frenzySpeed * 0.7)) * (intensityScale * 0.65);
+      motorOffsets.LFOREARM = Math.sin(time * (frenzySpeed * 1.2)) * (intensityScale * 0.8);
+      motorOffsets.RFOREARM = Math.cos(time * (frenzySpeed * 1.1)) * (intensityScale * 0.8);
       break;
   }
   

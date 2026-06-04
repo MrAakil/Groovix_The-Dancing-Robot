@@ -1,0 +1,267 @@
+GROOVIX MARKOV DANCE UPDATE NOTES
+=================================
+
+Purpose
+-------
+The Groovix web app was refactored from continuous servo-angle streaming into a Markov-chain dance step selector.
+
+Old behavior:
+Music analysis -> browser generates servo angles -> WebSocket sends many SET/MOVE angle commands -> ESP32 follows streamed angles.
+
+New behavior:
+Music analysis -> browser chooses a dance step with Markov probabilities -> WebSocket sends STEP:<number> -> ESP32 executes local predefined movement.
+
+Primary WebSocket payload:
+STEP:4
+
+Optional extended payload:
+STEP:4:0.82
+
+Where:
+- 4 is the selected dance step ID.
+- 0.82 is optional audio energy.
+
+The ESP32 should store local movements in danceMoves[20] and run:
+applyMove(stepNumber);
+
+
+Important Architecture Notes
+----------------------------
+The browser does NOT stream servo angles during Markov dance playback anymore.
+The browser only sends stable STEP commands every 2-3 seconds.
+The ESP32 must perform the actual smooth servo interpolation locally.
+
+Manual calibration sliders may still use legacy SET:<MOTOR>:<ANGLE> commands.
+That is separate from the Markov dance engine.
+
+
+Updated Files
+-------------
+markov_dance.js
+- Contains the Markov dance state system.
+- Contains 20 dance states.
+- Contains the transition matrix.
+- Reads beatEnergy from the existing audio analysis pipeline.
+- Sends STEP:<id> through the existing WebSocket.
+- Keeps browser robot preview animated locally.
+
+script.js
+- Keeps WebSocket connection logic.
+- Keeps audio analysis.
+- Adds TX_STEP indicator.
+- Adds headPoseOffset for browser preview head tilt/bob.
+- Prevents legacy Markov/procedural dance code from streaming servo angles.
+
+mock_esp32.js
+- Updated to receive STEP:<id> messages.
+- Displays the active step.
+
+README.md
+- Updated with the new STEP protocol and ESP32 migration notes.
+
+
+Dance Step List
+---------------
+Each Markov state has:
+- id
+- name
+- energy category
+- browser preview pose
+
+The ESP32 should implement matching local danceMoves for these IDs.
+For best results, each ESP32 move should include:
+- left shoulder servo target
+- left arm/elbow servo target
+- right shoulder servo target
+- right arm/elbow servo target
+- head servo target if hardware supports head movement
+
+
+STEP 1: REST_NATURAL
+Energy category: LOW
+Meaning: neutral resting pose.
+Suggested motion: arms and shoulders centered, head centered.
+
+STEP 2: SWAY_LEFT
+Energy category: LOW
+Meaning: gentle lean/sway to the left.
+Suggested motion: left shoulder lowers/opens, right shoulder counters, head tilts left.
+
+STEP 3: SWAY_RIGHT
+Energy category: LOW
+Meaning: gentle lean/sway to the right.
+Suggested motion: mirror of SWAY_LEFT, head tilts right.
+
+STEP 4: GENTLE_OPEN
+Energy category: LOW
+Meaning: soft open-body pose.
+Suggested motion: shoulders open outward, elbows relaxed, head slight calm bob.
+
+STEP 5: SOFT_CROSS
+Energy category: LOW
+Meaning: soft crossed-arm pose.
+Suggested motion: shoulders move inward, elbows fold/cross, head stays mostly centered.
+
+STEP 6: LEFT_REACH
+Energy category: LOW
+Meaning: subtle reach to the left.
+Suggested motion: left shoulder reaches outward/up, right arm stabilizes, head looks left.
+
+STEP 7: RIGHT_REACH
+Energy category: LOW
+Meaning: subtle reach to the right.
+Suggested motion: mirror of LEFT_REACH, head looks right.
+
+STEP 8: GROOVE_WIDE
+Energy category: MID
+Meaning: medium-energy wide groove.
+Suggested motion: both shoulders open wider, elbows counterpose, head slight left tilt/bob.
+
+STEP 9: GROOVE_NARROW
+Energy category: MID
+Meaning: medium-energy narrow groove.
+Suggested motion: shoulders narrow/cross inward, elbows counterpose, head slight right tilt/bob.
+
+STEP 10: PUMP_LEFT
+Energy category: MID
+Meaning: left-side pump accent.
+Suggested motion: left arm pumps up/down, right side counters, head snaps/leans left.
+
+STEP 11: PUMP_RIGHT
+Energy category: MID
+Meaning: right-side pump accent.
+Suggested motion: mirror of PUMP_LEFT, head snaps/leans right.
+
+STEP 12: HALF_WAVE
+Energy category: MID
+Meaning: one-sided wave gesture.
+Suggested motion: one shoulder opens while elbow creates a wave curve, head follows the wave.
+
+STEP 13: BOUNCE_ARMS
+Energy category: MID
+Meaning: rhythmic bounce pose.
+Suggested motion: both shoulders pulse with beat, elbows bounce, head bobs strongly.
+
+STEP 14: MID_CROSS
+Energy category: MID
+Meaning: stronger crossed-arm groove.
+Suggested motion: shoulders and elbows cross more sharply than SOFT_CROSS, head centered.
+
+STEP 15: FULL_OPEN
+Energy category: HIGH
+Meaning: high-energy full open pose.
+Suggested motion: shoulders spread wide, elbows extended, head pops up or centers.
+
+STEP 16: FULL_CROSS
+Energy category: HIGH
+Meaning: high-energy full cross pose.
+Suggested motion: arms cross dramatically, shoulders close, head bobs down/up.
+
+STEP 17: VICTORY_ARMS
+Energy category: HIGH
+Meaning: arms-up victory pose.
+Suggested motion: both shoulders lift, elbows angle for an overhead pose, head lifts.
+
+STEP 18: POWER_LEFT
+Energy category: HIGH
+Meaning: powerful left accent.
+Suggested motion: left arm/shoulder makes a strong punch/reach, head tilts left.
+
+STEP 19: POWER_RIGHT
+Energy category: HIGH
+Meaning: powerful right accent.
+Suggested motion: mirror of POWER_LEFT, head tilts right.
+
+STEP 20: FRENZY_SPREAD
+Energy category: HIGH
+Meaning: maximum-energy spread pose.
+Suggested motion: shoulders spread sharply, elbows extended, head bobs strongly.
+
+
+Energy Categories
+-----------------
+The browser continuously computes beatEnergy from the existing Web Audio FFT pipeline.
+
+Energy classification:
+- LOW: beatEnergy <= 0.33
+- MID: beatEnergy <= 0.66
+- HIGH: beatEnergy > 0.66
+
+Energy affects selection probabilities:
+- LOW energy favors category A / smooth steps.
+- MID energy favors category B / groove steps.
+- HIGH energy favors category C / aggressive steps.
+
+
+Markov Transition Logic
+-----------------------
+The current dance state influences the next state.
+The transition matrix is explicit and configurable in markov_dance.js.
+
+Example:
+State 2 can transition to:
+- State 3 with 40%
+- State 5 with 30%
+- State 1 with 20%
+- State 4 with 10%
+
+The final probability is adjusted by current audio energy.
+For example, if the music is high energy, category C states become more likely.
+
+The engine also tracks recent states and applies a repeat penalty.
+This helps avoid repetitive loops like 2 -> 3 -> 2 -> 3 forever.
+
+
+Timing
+------
+Dance state changes happen about every 2-3 seconds.
+
+Timing is adaptive:
+- Higher energy can shorten the delay.
+- Lower energy can lengthen the delay.
+- If a BPM estimate exists globally as estimatedBpm, it can slightly bias timing.
+
+
+ESP32 Implementation Guidance
+-----------------------------
+The ESP32 should parse incoming WebSocket messages like:
+STEP:7
+
+Pseudo-code:
+
+if (message.startsWith("STEP:")) {
+  int stepNumber = parseStepNumber(message);
+  applyMove(stepNumber);
+}
+
+The ESP32 should define local movement patterns:
+
+danceMoves[0]  -> step 1 REST_NATURAL
+danceMoves[1]  -> step 2 SWAY_LEFT
+danceMoves[2]  -> step 3 SWAY_RIGHT
+...
+danceMoves[19] -> step 20 FRENZY_SPREAD
+
+Each movement should include local servo targets and timing.
+The ESP32 should continue using smooth interpolation locally.
+
+Do not rely on the browser to send every servo angle during dance mode.
+The browser only tells the ESP32 which step to perform.
+
+
+Expected Result
+---------------
+The website analyzes music continuously.
+The Markov engine chooses the next dance step based on:
+- current state
+- transition probabilities
+- beat energy
+- anti-repeat history
+
+The browser sends:
+STEP:number
+
+The ESP32 executes:
+applyMove(stepNumber)
+
+This produces lower WebSocket traffic, more stable hardware behavior, and smoother robot motion.

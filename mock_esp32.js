@@ -3,8 +3,7 @@
 /* ======================================================== */
 
 // This script spins up a WebSocket server on port 81 to mock the ESP32.
-// It receives Markov dance step IDs and prints them in a clean terminal HUD
-// interface. The real ESP32 maps these IDs to danceMoves[20] locally.
+// It receives servo angle signals and prints them in a clean terminal HUD.
 
 const http = require('http');
 
@@ -34,8 +33,15 @@ function startServer() {
 
   const wss = new WebSocket.Server({ noServer: true });
 
-  let currentStep = 1;
-  let lastStepEnergy = 0.0;
+  const motorAngles = {
+    LSHOULDER_V: 90,
+    LSHOULDER_H: 90,
+    LFOREARM: 90,
+    RSHOULDER_V: 90,
+    RSHOULDER_H: 90,
+    RFOREARM: 90,
+    HEAD_YAW: 90,
+  };
   let connectionCount = 0;
 
   server.on('upgrade', (request, socket, head) => {
@@ -57,22 +63,15 @@ function startServer() {
         return;
       }
 
-      if (msgStr.startsWith("STEP:")) {
+      if (msgStr.startsWith("SET:")) {
         const parts = msgStr.split(":");
-        const step = parseInt(parts[1], 10);
-        const energy = parts.length > 2 ? parseFloat(parts[2]) : lastStepEnergy;
+        const motorName = parts[1];
+        const angle = parseInt(parts[2], 10);
 
-        if (Number.isInteger(step) && step >= 1 && step <= 20) {
-          currentStep = step;
+        if (Object.prototype.hasOwnProperty.call(motorAngles, motorName) && Number.isInteger(angle)) {
+          motorAngles[motorName] = Math.max(0, Math.min(180, angle));
         }
 
-        if (Number.isFinite(energy)) {
-          lastStepEnergy = energy;
-        }
-
-        renderHUD();
-      } else if (msgStr.startsWith("SET:")) {
-        console.log(`Legacy SET command ignored by step-mode mock: ${msgStr}`);
         renderHUD();
       }
     });
@@ -91,7 +90,7 @@ function startServer() {
     console.log("====================================================");
     console.log(" Awaiting incoming WebSocket connection from web client...");
     console.log(" Expected URL format: ws://localhost:81");
-    console.log(" Expected command format: STEP:<id> or STEP:<id>:<energy>");
+    console.log(" Expected command format: SET:<motor>:<angle>");
     console.log("====================================================");
   });
 
@@ -110,19 +109,17 @@ function startServer() {
     }
     console.log("---------------------------------------------------------------------");
 
-    const barWidth = 40;
-    const filledWidth = Math.round(lastStepEnergy * barWidth);
-    const emptyWidth = barWidth - filledWidth;
-    const beatBar = "#".repeat(filledWidth) + ".".repeat(emptyWidth);
-
-    let color = "\x1b[36m";
-    if (lastStepEnergy > 0.5 && lastStepEnergy <= 0.8) color = "\x1b[32m";
-    if (lastStepEnergy > 0.8) color = "\x1b[35m";
-
-    console.log(` Step Energy Bias:      [${color}${beatBar}\x1b[0m]  ${lastStepEnergy.toFixed(2)}`);
+    console.log(" Active Servo Targets:");
     console.log("---------------------------------------------------------------------");
-    console.log(` Active Dance Step:     STEP:${String(currentStep).padStart(2, '0')}`);
-    console.log(" Local ESP32 Action:    applyMove(stepNumber)");
+    Object.entries(motorAngles).forEach(([motorName, angle]) => {
+      const barWidth = 30;
+      const filledWidth = Math.round((angle / 180) * barWidth);
+      const emptyWidth = barWidth - filledWidth;
+      const angleBar = "#".repeat(filledWidth) + ".".repeat(emptyWidth);
+      console.log(` ${motorName.padEnd(14)} [\x1b[36m${angleBar}\x1b[0m] ${String(angle).padStart(3)} deg`);
+    });
+    console.log("---------------------------------------------------------------------");
+    console.log(" Local ESP32 Action:    servo.write(angle) per received motor signal");
     console.log("=====================================================================");
     console.log(" Press Ctrl+C to terminate the mock server.");
   }

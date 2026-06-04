@@ -7,29 +7,41 @@
 /* ================================================================ */
 /* SECTION 1: STATE DEFINITIONS                                     */
 /* ================================================================ */
+function armPose(leftVertical, leftHorizontal, leftForearm, rightVertical, rightHorizontal, rightForearm, headYaw) {
+  return {
+    leftShoulderVertical: leftVertical,
+    leftShoulderHorizontal: leftHorizontal,
+    leftForearm,
+    rightShoulderVertical: rightVertical,
+    rightShoulderHorizontal: rightHorizontal,
+    rightForearm,
+    headYaw,
+  };
+}
+
 const DANCE_STATES = [
-  { id: 1,  name: 'REST_NATURAL',   category: 'A', pose: { leftShoulder: 90,  leftArm: 90,  rightShoulder: 90,  rightArm: 90,  headTilt: 0,   headBob: 0 } },
-  { id: 2,  name: 'SWAY_LEFT',      category: 'A', pose: { leftShoulder: 72,  leftArm: 104, rightShoulder: 102, rightArm: 82,  headTilt: -7,  headBob: 1 } },
-  { id: 3,  name: 'SWAY_RIGHT',     category: 'A', pose: { leftShoulder: 108, leftArm: 78,  rightShoulder: 78,  rightArm: 106, headTilt: 7,   headBob: 1 } },
-  { id: 4,  name: 'GENTLE_OPEN',    category: 'A', pose: { leftShoulder: 62,  leftArm: 112, rightShoulder: 118, rightArm: 68,  headTilt: 0,   headBob: -1 } },
-  { id: 5,  name: 'SOFT_CROSS',     category: 'A', pose: { leftShoulder: 118, leftArm: 62,  rightShoulder: 62,  rightArm: 118, headTilt: 0,   headBob: 2 } },
-  { id: 6,  name: 'LEFT_REACH',     category: 'A', pose: { leftShoulder: 46,  leftArm: 72,  rightShoulder: 88,  rightArm: 104, headTilt: -10, headBob: 0 } },
-  { id: 7,  name: 'RIGHT_REACH',    category: 'A', pose: { leftShoulder: 92,  leftArm: 104, rightShoulder: 46,  rightArm: 72,  headTilt: 10,  headBob: 0 } },
+  { id: 1,  name: 'REST_NATURAL',   category: 'A', pose: armPose(90,  90,  90,  90,  90,  90,  90) },
+  { id: 2,  name: 'SWAY_LEFT',      category: 'A', pose: armPose(76,  72,  104, 102, 106, 82,  72) },
+  { id: 3,  name: 'SWAY_RIGHT',     category: 'A', pose: armPose(108, 74,  78,  78,  108, 106, 108) },
+  { id: 4,  name: 'GENTLE_OPEN',    category: 'A', pose: armPose(66,  56,  112, 118, 124, 68,  90) },
+  { id: 5,  name: 'SOFT_CROSS',     category: 'A', pose: armPose(118, 122, 62,  62,  58,  118, 90) },
+  { id: 6,  name: 'LEFT_REACH',     category: 'A', pose: armPose(48,  44,  72,  88,  94,  104, 65) },
+  { id: 7,  name: 'RIGHT_REACH',    category: 'A', pose: armPose(92,  86,  104, 48,  136, 72,  115) },
 
-  { id: 8,  name: 'GROOVE_WIDE',    category: 'B', pose: { leftShoulder: 50,  leftArm: 124, rightShoulder: 132, rightArm: 56,  headTilt: -5,  headBob: 3 } },
-  { id: 9,  name: 'GROOVE_NARROW',  category: 'B', pose: { leftShoulder: 132, leftArm: 58,  rightShoulder: 50,  rightArm: 122, headTilt: 5,   headBob: 3 } },
-  { id: 10, name: 'PUMP_LEFT',      category: 'B', pose: { leftShoulder: 34,  leftArm: 46,  rightShoulder: 112, rightArm: 94,  headTilt: -12, headBob: 4 } },
-  { id: 11, name: 'PUMP_RIGHT',     category: 'B', pose: { leftShoulder: 112, leftArm: 94,  rightShoulder: 34,  rightArm: 46,  headTilt: 12,  headBob: 4 } },
-  { id: 12, name: 'HALF_WAVE',      category: 'B', pose: { leftShoulder: 58,  leftArm: 38,  rightShoulder: 142, rightArm: 112, headTilt: -8,  headBob: 2 } },
-  { id: 13, name: 'BOUNCE_ARMS',    category: 'B', pose: { leftShoulder: 76,  leftArm: 64,  rightShoulder: 76,  rightArm: 116, headTilt: 0,   headBob: 6 } },
-  { id: 14, name: 'MID_CROSS',      category: 'B', pose: { leftShoulder: 138, leftArm: 136, rightShoulder: 138, rightArm: 44,  headTilt: 0,   headBob: 3 } },
+  { id: 8,  name: 'GROOVE_WIDE',    category: 'B', pose: armPose(50,  42,  124, 132, 138, 56,  78) },
+  { id: 9,  name: 'GROOVE_NARROW',  category: 'B', pose: armPose(132, 128, 58,  50,  52,  122, 102) },
+  { id: 10, name: 'PUMP_LEFT',      category: 'B', pose: armPose(36,  66,  46,  112, 108, 94,  60) },
+  { id: 11, name: 'PUMP_RIGHT',     category: 'B', pose: armPose(112, 72,  94,  36,  114, 46,  120) },
+  { id: 12, name: 'HALF_WAVE',      category: 'B', pose: armPose(58,  48,  38,  142, 126, 112, 72) },
+  { id: 13, name: 'BOUNCE_ARMS',    category: 'B', pose: armPose(76,  80,  64,  76,  100, 116, 90) },
+  { id: 14, name: 'MID_CROSS',      category: 'B', pose: armPose(138, 126, 136, 138, 54,  44,  90) },
 
-  { id: 15, name: 'FULL_OPEN',      category: 'C', pose: { leftShoulder: 22,  leftArm: 34,  rightShoulder: 158, rightArm: 146, headTilt: 0,   headBob: -2 } },
-  { id: 16, name: 'FULL_CROSS',     category: 'C', pose: { leftShoulder: 158, leftArm: 148, rightShoulder: 22,  rightArm: 32,  headTilt: 0,   headBob: 5 } },
-  { id: 17, name: 'VICTORY_ARMS',   category: 'C', pose: { leftShoulder: 32,  leftArm: 28,  rightShoulder: 32,  rightArm: 152, headTilt: 0,   headBob: -4 } },
-  { id: 18, name: 'POWER_LEFT',     category: 'C', pose: { leftShoulder: 12,  leftArm: 36,  rightShoulder: 148, rightArm: 82,  headTilt: -15, headBob: 5 } },
-  { id: 19, name: 'POWER_RIGHT',    category: 'C', pose: { leftShoulder: 148, leftArm: 82,  rightShoulder: 12,  rightArm: 36,  headTilt: 15,  headBob: 5 } },
-  { id: 20, name: 'FRENZY_SPREAD',  category: 'C', pose: { leftShoulder: 16,  leftArm: 26,  rightShoulder: 164, rightArm: 154, headTilt: 0,   headBob: 8 } },
+  { id: 15, name: 'FULL_OPEN',      category: 'C', pose: armPose(22,  30,  34,  158, 150, 146, 90) },
+  { id: 16, name: 'FULL_CROSS',     category: 'C', pose: armPose(158, 142, 148, 22,  38,  32,  90) },
+  { id: 17, name: 'VICTORY_ARMS',   category: 'C', pose: armPose(32,  58,  28,  32,  122, 152, 90) },
+  { id: 18, name: 'POWER_LEFT',     category: 'C', pose: armPose(12,  46,  36,  148, 112, 82,  55) },
+  { id: 19, name: 'POWER_RIGHT',    category: 'C', pose: armPose(148, 68,  82,  12,  134, 36,  125) },
+  { id: 20, name: 'FRENZY_SPREAD',  category: 'C', pose: armPose(16,  28,  26,  164, 152, 154, 90) },
 ];
 
 const ENERGY_THRESHOLDS = {
@@ -49,16 +61,22 @@ const DANCE_TIMING = {
   MAX_MS: 3000,
 };
 
-const STEP_PROTOCOL = {
-  INCLUDE_ENERGY: false,
+const SERVO_PROTOCOL = {
   MIN_REPEAT_GAP: 2,
+};
+
+const MARKOV_KINEMATICS = {
+  MAX_JOINT_DELTA: 180,
+  LOW_SMOOTHING: 1.25,
+  MID_SMOOTHING: 0.85,
+  HIGH_SMOOTHING: 0.35,
 };
 
 const ENERGY_PROFILE_INTERVAL_MS = 500;
 const UI_LERP_SPEED = 0.12;
 
 /*
- * Tunable Markov matrix. Each source state maps to likely next step IDs.
+ * Tunable Markov matrix. Each source state maps to likely next pose IDs.
  * Probabilities are intentionally local: most transitions stay in a compatible
  * energy band, while a few bridge states let the robot ramp up or cool down.
  */
@@ -90,7 +108,25 @@ const TRANSITION_MATRIX = {
 /* ================================================================ */
 const MarkovDance = (() => {
   const statesById = new Map(DANCE_STATES.map(state => [state.id, state]));
-  const POSE_FIELDS = ['leftShoulder', 'leftArm', 'rightShoulder', 'rightArm', 'headTilt', 'headBob'];
+  const POSE_FIELDS = [
+    'leftShoulderVertical',
+    'leftShoulderHorizontal',
+    'leftForearm',
+    'rightShoulderVertical',
+    'rightShoulderHorizontal',
+    'rightForearm',
+    'headYaw',
+  ];
+
+  const SERVO_POSE_MAP = {
+    LSHOULDER_V: 'leftShoulderVertical',
+    LSHOULDER_H: 'leftShoulderHorizontal',
+    LFOREARM: 'leftForearm',
+    RSHOULDER_V: 'rightShoulderVertical',
+    RSHOULDER_H: 'rightShoulderHorizontal',
+    RFOREARM: 'rightForearm',
+    HEAD_YAW: 'headYaw',
+  };
 
   let transitionTable = new Map();
   let currentState = DANCE_STATES[0];
@@ -102,7 +138,7 @@ const MarkovDance = (() => {
   let schedulerTimer = null;
   let energyTimer = null;
   let motionFrameId = null;
-  let lastStepCommand = '';
+  let lastPoseCommandKey = '';
 
   function isSongPlaying() {
     return typeof isAudioPlaying !== 'undefined' && isAudioPlaying;
@@ -160,6 +196,26 @@ const MarkovDance = (() => {
     console.log(`[MARKOV] Loaded ${transitionTable.size} explicit transition rows.`);
   }
 
+  function getPoseDistance(fromPose, toPose) {
+    const totalDistance = POSE_FIELDS.reduce((sum, field) => {
+      return sum + Math.abs((toPose[field] || 0) - (fromPose[field] || 0));
+    }, 0);
+
+    return totalDistance / (POSE_FIELDS.length * MARKOV_KINEMATICS.MAX_JOINT_DELTA);
+  }
+
+  function getKinematicWeight(candidateState) {
+    const smoothingByEnergy = {
+      LOW: MARKOV_KINEMATICS.LOW_SMOOTHING,
+      MID: MARKOV_KINEMATICS.MID_SMOOTHING,
+      HIGH: MARKOV_KINEMATICS.HIGH_SMOOTHING,
+    };
+    const distance = getPoseDistance(currentState.pose, candidateState.pose);
+    const smoothing = smoothingByEnergy[currentEnergyCategory] || MARKOV_KINEMATICS.MID_SMOOTHING;
+
+    return Math.max(0.2, 1 - (distance * smoothing));
+  }
+
   function updateEnergySample() {
     if (typeof computeBeatEnergy === 'function') {
       computeBeatEnergy();
@@ -181,10 +237,11 @@ const MarkovDance = (() => {
       const wasRecent = recentStateIds.includes(candidate.state.id);
       const repeatPenalty = wasRecent ? 0.35 : 1;
       const categoryWeight = weights[candidate.state.category] || 1;
+      const kinematicWeight = getKinematicWeight(candidate.state);
 
       return {
         ...candidate,
-        weight: candidate.baseProbability * categoryWeight * repeatPenalty,
+        weight: candidate.baseProbability * categoryWeight * repeatPenalty * kinematicWeight,
       };
     });
 
@@ -217,29 +274,36 @@ const MarkovDance = (() => {
     return Math.max(DANCE_TIMING.MIN_MS, Math.min(DANCE_TIMING.MAX_MS, energyDelay || DANCE_TIMING.DEFAULT_MS));
   }
 
-  function formatStepCommand(stateId) {
-    if (STEP_PROTOCOL.INCLUDE_ENERGY) {
-      return `STEP:${stateId}:${currentEnergyValue.toFixed(2)}`;
-    }
-
-    return `STEP:${stateId}`;
+  function getServoTargets(pose) {
+    return Object.entries(SERVO_POSE_MAP).map(([motorName, poseField]) => ({
+      motorName,
+      angle: Math.round(Math.max(0, Math.min(180, pose[poseField]))),
+    }));
   }
 
-  function sendDanceStep(stateId) {
+  function sendServoPose(state) {
     if (!isSongPlaying()) return;
 
-    const command = formatStepCommand(stateId);
-    if (command === lastStepCommand) return;
-    lastStepCommand = command;
+    const servoTargets = getServoTargets(state.pose);
+    const poseCommandKey = servoTargets.map(target => `${target.motorName}:${target.angle}`).join('|');
+    if (poseCommandKey === lastPoseCommandKey) return;
+    lastPoseCommandKey = poseCommandKey;
+
+    const sentCommands = [];
 
     if (typeof wsConnected !== 'undefined' && wsConnected && typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(command);
-      if (typeof bytesSent !== 'undefined') bytesSent += command.length;
-      if (typeof flashTxLight === 'function') flashTxLight('step');
+      servoTargets.forEach(target => {
+        const command = `SET:${target.motorName}:${target.angle}`;
+        ws.send(command);
+        sentCommands.push(command);
+        if (typeof bytesSent !== 'undefined') bytesSent += command.length;
+      });
+      if (typeof flashTxLight === 'function') flashTxLight('pose');
     }
 
     if (typeof logWS === 'function') {
-      logWS(`SENT -> ${command}`, 'tx-cmd');
+      const signalText = servoTargets.map(target => `${target.motorName}:${target.angle}`).join(' ');
+      logWS(`SENT -> POSE:${state.id} ${signalText}`, 'tx-cmd');
     }
   }
 
@@ -268,7 +332,7 @@ const MarkovDance = (() => {
     if (cellIdle) cellIdle.innerText = `LOW x${ENERGY_WEIGHTS[currentEnergyCategory].A.toFixed(1)}`;
     if (cellBounce) cellBounce.innerText = `MID x${ENERGY_WEIGHTS[currentEnergyCategory].B.toFixed(1)}`;
     if (cellWave) cellWave.innerText = `HIGH x${ENERGY_WEIGHTS[currentEnergyCategory].C.toFixed(1)}`;
-    if (cellFrenzy) cellFrenzy.innerText = `STEP ${currentState.id}`;
+    if (cellFrenzy) cellFrenzy.innerText = `POSE ${currentState.id}`;
   }
 
   function updateStateUi(state, transitionMeta) {
@@ -291,7 +355,7 @@ const MarkovDance = (() => {
 
     if (typeof logWS === 'function') {
       logWS(
-        `MARKOV -> step:${state.id} cat:${state.category} energy:${currentEnergyCategory} p:${transitionMeta.selected.probability.toFixed(2)}`,
+        `MARKOV -> pose:${state.id} cat:${state.category} energy:${currentEnergyCategory} p:${transitionMeta.selected.probability.toFixed(2)}`,
         'tx-cmd'
       );
     }
@@ -302,30 +366,28 @@ const MarkovDance = (() => {
     targetPose = { ...nextState.pose };
     recentStateIds.push(nextState.id);
 
-    while (recentStateIds.length > STEP_PROTOCOL.MIN_REPEAT_GAP + 1) {
+    while (recentStateIds.length > SERVO_PROTOCOL.MIN_REPEAT_GAP + 1) {
       recentStateIds.shift();
     }
 
     updateStateUi(nextState, transitionMeta);
-    sendDanceStep(nextState.id);
+    sendServoPose(nextState);
 
     console.log(
-      `[MARKOV] step=${nextState.id} state=${nextState.name} category=${nextState.category} energy=${currentEnergyValue.toFixed(2)}`
+      `[MARKOV] pose=${nextState.id} state=${nextState.name} category=${nextState.category} energy=${currentEnergyValue.toFixed(2)}`
     );
   }
 
   function updateRobotPose(pose) {
     if (typeof motorOffsets === 'undefined' || typeof motors === 'undefined') return;
 
-    motorOffsets.LSHOULDER = pose.leftShoulder - motors.LSHOULDER;
-    motorOffsets.LARM = pose.leftArm - motors.LARM;
-    motorOffsets.RSHOULDER = pose.rightShoulder - motors.RSHOULDER;
-    motorOffsets.RARM = pose.rightArm - motors.RARM;
-
-    if (typeof headPoseOffset !== 'undefined') {
-      headPoseOffset.tilt = pose.headTilt;
-      headPoseOffset.bob = pose.headBob;
-    }
+    motorOffsets.LSHOULDER_V = pose.leftShoulderVertical - motors.LSHOULDER_V;
+    motorOffsets.LSHOULDER_H = pose.leftShoulderHorizontal - motors.LSHOULDER_H;
+    motorOffsets.LFOREARM = pose.leftForearm - motors.LFOREARM;
+    motorOffsets.RSHOULDER_V = pose.rightShoulderVertical - motors.RSHOULDER_V;
+    motorOffsets.RSHOULDER_H = pose.rightShoulderHorizontal - motors.RSHOULDER_H;
+    motorOffsets.RFOREARM = pose.rightForearm - motors.RFOREARM;
+    motorOffsets.HEAD_YAW = pose.headYaw - motors.HEAD_YAW;
 
     if (typeof updateRobotHologram === 'function') {
       updateRobotHologram();
@@ -341,12 +403,13 @@ const MarkovDance = (() => {
     });
 
     updateRobotPose({
-      leftShoulder: Math.round(Math.max(0, Math.min(180, currentPose.leftShoulder))),
-      leftArm: Math.round(Math.max(0, Math.min(180, currentPose.leftArm))),
-      rightShoulder: Math.round(Math.max(0, Math.min(180, currentPose.rightShoulder))),
-      rightArm: Math.round(Math.max(0, Math.min(180, currentPose.rightArm))),
-      headTilt: currentPose.headTilt,
-      headBob: currentPose.headBob,
+      leftShoulderVertical: Math.round(Math.max(0, Math.min(180, currentPose.leftShoulderVertical))),
+      leftShoulderHorizontal: Math.round(Math.max(0, Math.min(180, currentPose.leftShoulderHorizontal))),
+      leftForearm: Math.round(Math.max(0, Math.min(180, currentPose.leftForearm))),
+      rightShoulderVertical: Math.round(Math.max(0, Math.min(180, currentPose.rightShoulderVertical))),
+      rightShoulderHorizontal: Math.round(Math.max(0, Math.min(180, currentPose.rightShoulderHorizontal))),
+      rightForearm: Math.round(Math.max(0, Math.min(180, currentPose.rightForearm))),
+      headYaw: Math.round(Math.max(0, Math.min(180, currentPose.headYaw))),
     });
     motionFrameId = requestAnimationFrame(motionLoop);
   }
@@ -378,7 +441,7 @@ const MarkovDance = (() => {
 
   function start() {
     console.log('[MARKOV] ==========================================');
-    console.log('[MARKOV] GROOVIX STEP Markov Dance Engine starting');
+    console.log('[MARKOV] GROOVIX Servo Markov Dance Engine starting');
     console.log('[MARKOV] ==========================================');
 
     buildTransitionTable();
@@ -386,7 +449,7 @@ const MarkovDance = (() => {
     currentEnergyValue = 0;
     currentEnergyCategory = 'LOW';
     recentStateIds = [currentState.id];
-    lastStepCommand = '';
+    lastPoseCommandKey = '';
     targetPose = { ...currentState.pose };
     currentPose = { ...currentState.pose };
 
@@ -400,7 +463,7 @@ const MarkovDance = (() => {
     schedulerTimer = setTimeout(scheduleNextTransition, DANCE_TIMING.DEFAULT_MS);
     motionLoop();
 
-    console.log('[MARKOV] Step engine ready: 20 states | payload: STEP:<id> | cadence: adaptive 2s-3s');
+    console.log('[MARKOV] Servo engine ready: 20 states | payload: SET:<motor>:<angle> x7 | cadence: adaptive 2s-3s');
   }
 
   function stop() {
