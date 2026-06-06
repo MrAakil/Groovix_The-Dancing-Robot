@@ -56,9 +56,9 @@ const ENERGY_WEIGHTS = {
 };
 
 const DANCE_TIMING = {
-  MIN_MS: 2000,
-  DEFAULT_MS: 2600,
-  MAX_MS: 3000,
+  MIN_MS: 1000,
+  DEFAULT_MS: 1500,
+  MAX_MS: 2000,
 };
 
 const SERVO_PROTOCOL = {
@@ -463,7 +463,7 @@ const MarkovDance = (() => {
     schedulerTimer = setTimeout(scheduleNextTransition, DANCE_TIMING.DEFAULT_MS);
     motionLoop();
 
-    console.log('[MARKOV] Servo engine ready: 20 states | payload: SET:<motor>:<angle> x7 | cadence: adaptive 2s-3s');
+    console.log('[MARKOV] Servo engine ready: 20 states | payload: SET:<motor>:<angle> x7 | cadence: adaptive 1s-2s');
   }
 
   function stop() {
