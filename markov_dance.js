@@ -132,6 +132,8 @@ const MarkovDance = (() => {
   let currentState = DANCE_STATES[0];
   let currentEnergyValue = 0;
   let currentEnergyCategory = 'LOW';
+  let trackEnergyValue = 0;
+  let trackEnergySamples = 0;
   let recentStateIds = [currentState.id];
   let targetPose = { ...currentState.pose };
   let currentPose = { ...currentState.pose };
@@ -223,7 +225,15 @@ const MarkovDance = (() => {
 
     const rawEnergy = clamp01(typeof beatEnergy === 'number' ? beatEnergy : 0);
     currentEnergyValue = rawEnergy;
-    currentEnergyCategory = classifyEnergy(rawEnergy);
+    trackEnergySamples += 1;
+
+    const profileAlpha = trackEnergySamples < 6 ? 0.28 : 0.12;
+    trackEnergyValue = trackEnergySamples === 1
+      ? rawEnergy
+      : (trackEnergyValue * (1 - profileAlpha)) + (rawEnergy * profileAlpha);
+
+    const blendedEnergy = (rawEnergy * 0.55) + (trackEnergyValue * 0.45);
+    currentEnergyCategory = classifyEnergy(blendedEnergy);
 
     if (typeof markovIntensity !== 'undefined') markovIntensity = currentEnergyCategory;
     if (typeof markovState !== 'undefined') markovState = currentState.name;
@@ -232,16 +242,22 @@ const MarkovDance = (() => {
   function getWeightedCandidates() {
     const candidates = transitionTable.get(currentState.id) || transitionTable.get(1);
     const weights = ENERGY_WEIGHTS[currentEnergyCategory];
+    const intensityBoost = {
+      LOW: { A: 1.35, B: 0.85, C: 0.45 },
+      MID: { A: 0.85, B: 1.25, C: 0.85 },
+      HIGH: { A: 0.45, B: 0.9, C: 1.45 },
+    }[currentEnergyCategory] || { A: 0.85, B: 1.25, C: 0.85 };
 
     const weighted = candidates.map(candidate => {
       const wasRecent = recentStateIds.includes(candidate.state.id);
       const repeatPenalty = wasRecent ? 0.35 : 1;
       const categoryWeight = weights[candidate.state.category] || 1;
+      const intensityCategoryWeight = intensityBoost[candidate.state.category] || 1;
       const kinematicWeight = getKinematicWeight(candidate.state);
 
       return {
         ...candidate,
-        weight: candidate.baseProbability * categoryWeight * repeatPenalty * kinematicWeight,
+        weight: candidate.baseProbability * categoryWeight * intensityCategoryWeight * repeatPenalty * kinematicWeight,
       };
     });
 
@@ -448,6 +464,8 @@ const MarkovDance = (() => {
     currentState = DANCE_STATES[0];
     currentEnergyValue = 0;
     currentEnergyCategory = 'LOW';
+    trackEnergyValue = 0;
+    trackEnergySamples = 0;
     recentStateIds = [currentState.id];
     lastPoseCommandKey = '';
     targetPose = { ...currentState.pose };
@@ -486,6 +504,7 @@ const MarkovDance = (() => {
       currentState,
       currentEnergyValue,
       currentEnergyCategory,
+      trackEnergyValue,
       recentStateIds,
       targetPose,
       currentPose,
