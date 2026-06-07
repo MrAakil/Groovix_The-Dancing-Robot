@@ -45,8 +45,8 @@ const DANCE_STATES = [
 ];
 
 const ENERGY_THRESHOLDS = {
-  LOW_MAX: 0.33,
-  MID_MAX: 0.66,
+  LOW_MAX: 0.34,
+  MID_MAX: 0.64,
 };
 
 const ENERGY_WEIGHTS = {
@@ -56,9 +56,15 @@ const ENERGY_WEIGHTS = {
 };
 
 const DANCE_TIMING = {
-  MIN_MS: 1000,
-  DEFAULT_MS: 1500,
-  MAX_MS: 2000,
+  MIN_MS: 500,
+  DEFAULT_MS: 800,
+  MAX_MS: 1400,
+};
+
+const DANCE_TIMING_BY_ENERGY = {
+  LOW: { MIN_MS: 850, MAX_MS: 1400 },
+  MID: { MIN_MS: 500, MAX_MS: 900 },
+  HIGH: { MIN_MS: 220, MAX_MS: 520 },
 };
 
 const SERVO_PROTOCOL = {
@@ -132,6 +138,7 @@ const MarkovDance = (() => {
   let currentState = DANCE_STATES[0];
   let currentEnergyValue = 0;
   let currentEnergyCategory = 'LOW';
+  let currentTrackEnergyValue = 0;
   let trackEnergyValue = 0;
   let trackEnergySamples = 0;
   let recentStateIds = [currentState.id];
@@ -223,16 +230,30 @@ const MarkovDance = (() => {
       computeBeatEnergy();
     }
 
-    const rawEnergy = clamp01(typeof beatEnergy === 'number' ? beatEnergy : 0);
-    currentEnergyValue = rawEnergy;
+    const bass = clamp01((typeof bassEnergy === 'number' ? bassEnergy : 0) / 255);
+    const mid = clamp01((typeof midEnergy === 'number' ? midEnergy : 0) / 255);
+    const treble = clamp01((typeof trebleEnergy === 'number' ? trebleEnergy : 0) / 255);
+    const peakEnergy = clamp01(typeof beatEnergy === 'number' ? beatEnergy : 0);
+    const spectralEnergy = clamp01((bass * 0.35) + (mid * 0.35) + (treble * 0.30));
+
+    const rawEnergy = (peakEnergy * 0.45) + (spectralEnergy * 0.55);
+    const compressedEnergy = Math.pow(clamp01(rawEnergy), 1.18);
+    const vibeDrive = clamp01((mid * 0.55) + (treble * 0.45));
+
+    let tunedEnergy = compressedEnergy;
+    if (vibeDrive > 0.42) tunedEnergy += 0.08;
+    if (vibeDrive > 0.58) tunedEnergy += 0.10;
+
+    currentEnergyValue = clamp01(tunedEnergy);
     trackEnergySamples += 1;
 
     const profileAlpha = trackEnergySamples < 6 ? 0.28 : 0.12;
     trackEnergyValue = trackEnergySamples === 1
-      ? rawEnergy
-      : (trackEnergyValue * (1 - profileAlpha)) + (rawEnergy * profileAlpha);
+      ? currentEnergyValue
+      : (trackEnergyValue * (1 - profileAlpha)) + (currentEnergyValue * profileAlpha);
 
-    const blendedEnergy = (rawEnergy * 0.55) + (trackEnergyValue * 0.45);
+    currentTrackEnergyValue = trackEnergyValue;
+    const blendedEnergy = (currentEnergyValue * 0.40) + (trackEnergyValue * 0.60);
     currentEnergyCategory = classifyEnergy(blendedEnergy);
 
     if (typeof markovIntensity !== 'undefined') markovIntensity = currentEnergyCategory;
@@ -280,14 +301,16 @@ const MarkovDance = (() => {
   }
 
   function getAdaptiveDelay() {
-    const energyRange = DANCE_TIMING.MAX_MS - DANCE_TIMING.MIN_MS;
-    const energyDelay = DANCE_TIMING.MAX_MS - Math.round(currentEnergyValue * energyRange);
+    const timing = DANCE_TIMING_BY_ENERGY[currentEnergyCategory] || DANCE_TIMING;
+    const blendedMotionEnergy = clamp01((currentEnergyValue * 0.35) + (trackEnergyValue * 0.65));
+    const energyRange = timing.MAX_MS - timing.MIN_MS;
+    const energyDelay = timing.MAX_MS - Math.round(blendedMotionEnergy * energyRange);
     const bpm = typeof estimatedBpm === 'number' && Number.isFinite(estimatedBpm) ? estimatedBpm : 0;
 
-    if (bpm >= 120) return Math.max(DANCE_TIMING.MIN_MS, energyDelay - 250);
-    if (bpm > 0 && bpm < 85) return Math.min(DANCE_TIMING.MAX_MS, energyDelay + 250);
+    if (bpm >= 120) return Math.max(timing.MIN_MS, energyDelay - 80);
+    if (bpm > 0 && bpm < 85) return Math.min(timing.MAX_MS, energyDelay + 120);
 
-    return Math.max(DANCE_TIMING.MIN_MS, Math.min(DANCE_TIMING.MAX_MS, energyDelay || DANCE_TIMING.DEFAULT_MS));
+    return Math.max(timing.MIN_MS, Math.min(timing.MAX_MS, energyDelay || timing.MAX_MS));
   }
 
   function getServoTargets(pose) {
@@ -464,6 +487,7 @@ const MarkovDance = (() => {
     currentState = DANCE_STATES[0];
     currentEnergyValue = 0;
     currentEnergyCategory = 'LOW';
+    currentTrackEnergyValue = 0;
     trackEnergyValue = 0;
     trackEnergySamples = 0;
     recentStateIds = [currentState.id];
@@ -504,6 +528,7 @@ const MarkovDance = (() => {
       currentState,
       currentEnergyValue,
       currentEnergyCategory,
+      currentTrackEnergyValue,
       trackEnergyValue,
       recentStateIds,
       targetPose,
