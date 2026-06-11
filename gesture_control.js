@@ -9,7 +9,7 @@ let gestureState = {
   camera: null,
   canvasElement: null,
   canvasCtx: null,
-  selectedMotor: null,
+  selectedMotors: null,
   motorAngles: {
     LSHOULDER_V: 90,
     LSHOULDER_H: 90,
@@ -18,16 +18,6 @@ let gestureState = {
     RSHOULDER_H: 90,
     RFOREARM: 90,
     HEAD_YAW: 90
-  },
-  
-  // Motor mapping: finger -> motor
-  motorMap: {
-    THUMB: 'LSHOULDER_V',      // Thumb = Motor 1
-    INDEX: 'LSHOULDER_H',       // Index = Motor 2
-    MIDDLE: 'LFOREARM',         // Middle = Motor 3
-    RING: 'RSHOULDER_V',        // Ring = Motor 4
-    PINKY: 'RSHOULDER_H',       // Pinky = Motor 5
-    HEAD: 'HEAD_YAW'            // Both thumb+index = Head
   },
   
   recentFrames: [],             // For jitter filtering
@@ -134,26 +124,35 @@ async function detectHandGestures() {
         const fingerStates = detectFingerStates(landmarks);
         
         // Determine which motor to control based on extended fingers
-        const selectedMotor = determineSelectedMotor(fingerStates);
+        const selectedMotors = determineSelectedMotors(fingerStates);
+        
+        // Serialize selected motors for comparison
+        const selectedMotorsStr = selectedMotors ? selectedMotors.join(',') : null;
+        const currentSelectedMotorsStr = gestureState.selectedMotors ? gestureState.selectedMotors.join(',') : null;
         
         // If a motor is selected and it's a new selection, update UI
-        if (selectedMotor && selectedMotor !== gestureState.selectedMotor) {
-          gestureState.selectedMotor = selectedMotor;
+        if (selectedMotorsStr !== currentSelectedMotorsStr) {
+          gestureState.selectedMotors = selectedMotors;
           updateSelectedMotorDisplay();
-          logTerminal(`Motor selected: ${selectedMotor}`, "info");
+          if (selectedMotorsStr) {
+            logTerminal(`Motors selected: ${selectedMotorsStr}`, "info");
+          }
         }
         
         // If a motor is selected, calculate angle from hand position
-        if (gestureState.selectedMotor) {
+        if (gestureState.selectedMotors && gestureState.selectedMotors.length > 0) {
           const angle = calculateAngleFromHandPosition(landmarks, handLabel);
-          gestureState.motorAngles[gestureState.selectedMotor] = angle;
           
-          // Send motor command if angle changed significantly
-          const lastAngle = gestureState.lastSentAngle[gestureState.selectedMotor] || 90;
-          if (Math.abs(angle - lastAngle) > gestureState.angleSendThreshold) {
-            sendMotorCommand(gestureState.selectedMotor, angle);
-            gestureState.lastSentAngle[gestureState.selectedMotor] = angle;
-          }
+          gestureState.selectedMotors.forEach(motor => {
+            gestureState.motorAngles[motor] = angle;
+            
+            // Send motor command if angle changed significantly
+            const lastAngle = gestureState.lastSentAngle[motor] || 90;
+            if (Math.abs(angle - lastAngle) > gestureState.angleSendThreshold) {
+              sendMotorCommand(motor, angle);
+              gestureState.lastSentAngle[motor] = angle;
+            }
+          });
           
           updateAngleDisplay(angle);
         }
@@ -163,8 +162,8 @@ async function detectHandGestures() {
       }
     } else {
       // No hands detected - reset motor selection
-      if (gestureState.selectedMotor) {
-        gestureState.selectedMotor = null;
+      if (gestureState.selectedMotors) {
+        gestureState.selectedMotors = null;
         updateSelectedMotorDisplay();
         updateGestureStatus('NO HANDS DETECTED');
       }
@@ -210,22 +209,18 @@ function detectFingerStates(landmarks) {
 }
 
 // Determine which motor should be controlled based on finger state
-function determineSelectedMotor(fingerStates) {
+function determineSelectedMotors(fingerStates) {
   // Count extended fingers
   const extendedCount = Object.values(fingerStates).filter(v => v).length;
   
-  // Single finger -> select corresponding motor
   if (extendedCount === 1) {
-    if (fingerStates.thumb) return gestureState.motorMap.THUMB;
-    if (fingerStates.index) return gestureState.motorMap.INDEX;
-    if (fingerStates.middle) return gestureState.motorMap.MIDDLE;
-    if (fingerStates.ring) return gestureState.motorMap.RING;
-    if (fingerStates.pinky) return gestureState.motorMap.PINKY;
-  }
-  
-  // Thumb + Index (and no other fingers) -> control head
-  if (fingerStates.thumb && fingerStates.index && !fingerStates.middle && !fingerStates.ring && !fingerStates.pinky) {
-    return gestureState.motorMap.HEAD;
+    return ['HEAD_YAW'];
+  } else if (extendedCount === 2) {
+    return ['LSHOULDER_V', 'RSHOULDER_V'];
+  } else if (extendedCount === 3) {
+    return ['LSHOULDER_H', 'RSHOULDER_H'];
+  } else if (extendedCount === 4) {
+    return ['LFOREARM', 'RFOREARM'];
   }
   
   return null;
@@ -324,14 +319,14 @@ function updateSelectedMotorDisplay() {
   const display = document.getElementById('gesture-motor-display');
   if (!display) return;
   
-  if (gestureState.selectedMotor) {
+  if (gestureState.selectedMotors && gestureState.selectedMotors.length > 0) {
     display.innerHTML = `
-      <span class="gesture-label">SELECTED MOTOR</span>
-      <span class="gesture-motor-name">${gestureState.selectedMotor}</span>
+      <span class="gesture-label">SELECTED MOTORS</span>
+      <span class="gesture-motor-name">${gestureState.selectedMotors.join(', ')}</span>
     `;
   } else {
     display.innerHTML = `
-      <span class="gesture-label">SHOW A FINGER</span>
+      <span class="gesture-label">SHOW 1-4 FINGERS</span>
       <span class="gesture-motor-name">--</span>
     `;
   }
@@ -372,7 +367,7 @@ function stopGestureControl() {
     gestureState.camera.stop();
   }
   gestureState.isInitialized = false;
-  gestureState.selectedMotor = null;
+  gestureState.selectedMotors = null;
   updateGestureStatus('STOPPED');
   updateSelectedMotorDisplay();
   updateAngleDisplay(90);
