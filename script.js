@@ -1228,6 +1228,17 @@ function init() {
   btnResetPose.addEventListener('click', resetRobotPose);
   btnDanceDemo.addEventListener('click', triggerDanceDemo);
   
+  // Gesture control button listeners
+  const btnGestureStart = document.getElementById('btn-gesture-start');
+  const btnGestureStop = document.getElementById('btn-gesture-stop');
+  
+  if (btnGestureStart) {
+    btnGestureStart.addEventListener('click', startGestureControlUI);
+  }
+  if (btnGestureStop) {
+    btnGestureStop.addEventListener('click', stopGestureControlUI);
+  }
+  
   // Setup visualizer sizes
   resizeCanvas();
   drawStaticVisualizer();
@@ -1245,5 +1256,39 @@ function init() {
   
   logTerminal("GROOVIX AI Robotics OS fully online and responsive.", "ok");
 }
+
+// Gesture Control UI wrapper functions
+function startGestureControlUI() {
+  const btnStart = document.getElementById('btn-gesture-start');
+  const btnStop = document.getElementById('btn-gesture-stop');
+  
+  if (!wsConnected && !isDemoMode) {
+    logTerminal("Hardware not connected. Connect first.", "error");
+    return;
+  }
+  
+  logTerminal("Initializing hand gesture control system...", "info");
+  
+  initGestureControl().then(success => {
+    if (success) {
+      logTerminal("Hand gesture detection ACTIVE", "ok");
+      btnStart.disabled = true;
+      btnStop.disabled = false;
+    } else {
+      logTerminal("Failed to initialize gesture control", "error");
+    }
+  });
+}
+
+function stopGestureControlUI() {
+  const btnStart = document.getElementById('btn-gesture-start');
+  const btnStop = document.getElementById('btn-gesture-stop');
+  
+  stopGestureControl();
+  logTerminal("Hand gesture control stopped", "warn");
+  btnStart.disabled = false;
+  btnStop.disabled = true;
+}
+
 
 window.onload = init;

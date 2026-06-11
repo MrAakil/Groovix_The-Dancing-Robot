@@ -12,6 +12,10 @@
   <link rel="stylesheet" href="style.css">
   <!-- FontAwesome Icons for modern dashboard styling -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- MediaPipe Tasks for hand gesture detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 </head>
 <body class="dark-theme">
 
@@ -502,6 +506,79 @@
           </div>
         </div>
 
+        <!-- HAND GESTURE MOTOR CONTROL PANEL -->
+        <div class="dashboard-card gesture-control-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-hand"></i> HAND GESTURE MOTOR CONTROL</h3>
+            <span id="gesture-status" class="hud-pill-neutral">INITIALIZING...</span>
+          </div>
+          <div class="card-body gesture-layout">
+            
+            <!-- Video and Canvas Container -->
+            <div class="gesture-video-container">
+              <video id="gesture-video" class="gesture-video" style="display: none;"></video>
+              <canvas id="gesture-canvas" class="gesture-canvas" width="480" height="360"></canvas>
+            </div>
+
+            <!-- Gesture Controls HUD -->
+            <div class="gesture-hud-grid">
+              
+              <!-- Motor Selection Display -->
+              <div class="gesture-panel panel-motor">
+                <span class="g-label">MOTOR SELECTED</span>
+                <div class="g-motor-display" id="gesture-motor-display">
+                  <span class="gesture-label">SHOW A FINGER</span>
+                  <span class="gesture-motor-name">--</span>
+                </div>
+              </div>
+
+              <!-- Angle Display -->
+              <div class="gesture-panel panel-angle">
+                <span class="g-label">SERVO ANGLE</span>
+                <div class="g-angle-display" id="gesture-angle-display">
+                  <span class="gesture-angle">90°</span>
+                </div>
+                <span class="g-subtext">RANGE: 0° - 180°</span>
+              </div>
+
+            </div>
+
+            <!-- Gesture Control Instructions -->
+            <div class="gesture-instructions">
+              <div class="instruction-group">
+                <span class="instr-title">MOTOR SELECTION</span>
+                <ul class="instr-list">
+                  <li><strong>Thumb</strong> → LSHOULDER_V</li>
+                  <li><strong>Index</strong> → LSHOULDER_H</li>
+                  <li><strong>Middle</strong> → LFOREARM</li>
+                  <li><strong>Ring</strong> → RSHOULDER_V</li>
+                  <li><strong>Pinky</strong> → RSHOULDER_H</li>
+                  <li><strong>Thumb+Index</strong> → HEAD_YAW</li>
+                </ul>
+              </div>
+              <div class="instruction-group">
+                <span class="instr-title">ANGLE CONTROL</span>
+                <ul class="instr-list">
+                  <li><strong>Move Left</strong> → 0° - 90°</li>
+                  <li><strong>Move Right</strong> → 90° - 180°</li>
+                  <li><strong>Center</strong> → 90°</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="gesture-actions">
+              <button id="btn-gesture-start" class="btn-hud success">
+                <i class="fa-solid fa-camera"></i> START GESTURE CONTROL
+              </button>
+              <button id="btn-gesture-stop" class="btn-hud alert" disabled>
+                <i class="fa-solid fa-stop"></i> STOP GESTURE
+              </button>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
     </main>
@@ -512,6 +589,7 @@
 
   <!-- Global scripts -->
   <script src="markov_dance.js"></script>
+  <script src="gesture_control.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

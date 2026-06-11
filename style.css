@@ -1303,3 +1303,184 @@ h1, h2, h3, h4, .font-orbitron {
     grid-template-columns: 1fr;
   }
 }
+
+/* ======================================================== */
+/* 11. GESTURE CONTROL STYLES                              */
+/* ======================================================== */
+
+.gesture-control-card {
+  grid-column: 1 / -1;
+  margin-top: 15px;
+}
+
+.gesture-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.gesture-video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.gesture-video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gesture-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.gesture-hud-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.gesture-panel {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.g-label {
+  font-family: var(--font-hud);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.g-motor-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gesture-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.gesture-motor-name {
+  font-family: var(--font-hud);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.g-angle-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gesture-angle {
+  font-family: var(--font-hud);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--neon-purple);
+  text-shadow: var(--glow-purple);
+}
+
+.g-subtext {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.gesture-instructions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.instruction-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.instr-title {
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--neon-amber);
+  text-shadow: var(--glow-amber);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.instr-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.instr-list li {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-main);
+  padding-left: 12px;
+  position: relative;
+}
+
+.instr-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--neon-green);
+}
+
+.instr-list strong {
+  color: var(--neon-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.gesture-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.gesture-actions .btn-hud {
+  flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gesture-hud-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .gesture-instructions {
+    grid-template-columns: 1fr;
+  }
+}
